@@ -1,14 +1,6 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-// Public routes that don't need auth (e.g. landing page, public info)
-const isPublicRoute = createRouteMatcher(["/", "/api/webhooks/clerk(.*)"]);
-
-export default clerkMiddleware(async (auth, req) => {
-  // If it's a private route, enforce auth
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
