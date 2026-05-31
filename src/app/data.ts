@@ -1,35 +1,97 @@
+export interface Startup {
+  id: string;
+  name: string;
+  tagline: string;
+  primaryIndustry: string;
+  secondaryIndustries: string[];
+  stage: 'Idea' | 'Pre-seed' | 'Seed' | 'Series A' | 'Scale';
+  location: string;
+  fundingStage: 'Unfunded' | 'Grant Match' | 'Equity Raised' | 'Fully Funded';
+  skillsNeeded: string[];
+  rolesAvailable: string[];
+  companyType: string;
+  techStack: string[];
+  logo: string;
+  description: string;
+}
+
+export interface FreelanceProject {
+  id: string;
+  title: string;
+  client: string;
+  budget: string;
+  budgetType: 'Fixed' | 'Hourly';
+  duration: string;
+  primaryIndustry: string;
+  secondaryIndustries: string[];
+  skills: string[];
+  description: string;
+  postedDate: string;
+}
+
+export interface IndividualInvestor {
+  id: string;
+  name: string;
+  title: string;
+  diasporaLocation?: string;
+  chequeRange: string;
+  primaryFocus: string;
+  secondaryFocus: string[];
+  skillsOffered: string[];
+  portfolioCount: number;
+  bio: string;
+  avatar: string;
+}
+
+export interface CompanyInvestor {
+  id: string;
+  name: string;
+  companyType: 'Venture Capital' | 'Corporate Venture' | 'Family Office' | 'Government Fund';
+  chequeRange: string;
+  primaryFocus: string;
+  secondaryFocus: string[];
+  portfolioCount: number;
+  description: string;
+  logo: string;
+  website: string;
+  leadPartners: string[];
+}
+
 export interface Builder {
   id: string;
   name: string;
   role: string;
-  avatar: string;
-  skills: string[];
-  field: 'AI' | 'SaaS' | 'Robotics' | 'Semiconductors' | 'AR/VR' | 'Fintech' | 'Deep Tech';
+  field: string;
   city: string;
-  experience: string;
   bio: string;
+  experience: string;
+  skills: string[];
   matchScore: number;
+  avatar: string;
 }
 
-export interface Investor {
+export interface Job {
   id: string;
-  name: string;
-  type: 'VC' | 'Angel Network' | 'Family Office' | 'Government Grant' | 'Corporate Fund';
-  focus: string[];
-  chequeSize: string;
-  portfolioCount: number;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  type: string;
+  skills: string[];
+  category: string;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  category: string;
   description: string;
-  logo: string;
-}
-
-export interface Partnership {
-  id: string;
-  name: string;
-  type: 'Corporate Alliance' | 'University Collab' | 'Diaspora Network' | 'Venture Connection';
-  entity: string;
-  benefit: string;
-  activeOpportunities: number;
-  icon: string;
+  problemStatement: string;
+  prizePool: string;
+  rewardType: string;
+  postedBy: string;
+  daysLeft: number;
+  participantsCount: number;
 }
 
 export interface GovProgram {
@@ -39,327 +101,378 @@ export interface GovProgram {
   fundingCap: string;
   eligibility: string;
   deadline: string;
-  type: 'Grant' | 'Incubator' | 'Procurement' | 'Subsidy';
+  type: string;
 }
 
-export interface Job {
+export interface Partnership {
   id: string;
-  title: string;
-  company: string;
-  location: string;
-  type: 'Remote' | 'Hybrid' | 'On-site';
-  salary: string;
-  skills: string[];
-  category: 'AI' | 'SaaS' | 'Robotics' | 'Semiconductors' | 'AR/VR' | 'Fintech' | 'Deep Tech';
+  name: string;
+  entity: string;
+  benefit: string;
+  type: string;
+  activeOpportunities: number;
+  icon: string;
 }
 
-export interface Challenge {
-  id: string;
-  title: string;
-  postedBy: string;
-  prizePool: string;
-  rewardType: 'Prize Money' | 'Pilot Contract' | 'Procurement Slot' | 'Equity Investment';
-  participantsCount: number;
-  daysLeft: number;
-  category: string;
-  description: string;
-  problemStatement: string;
-}
+// All major startup categories as provided by the user
+export const startupCategories = {
+  Software: [
+    'SaaS', 'B2B software', 'B2C apps', 'Developer tools', 'APIs and infrastructure',
+    'Cloud software', 'Automation tools', 'No-code / low-code', 'Cybersecurity',
+    'Data tools', 'Fintech software', 'Healthtech software', 'Edtech software',
+    'HR tech', 'CRM / ERP software', 'Marketplace software'
+  ],
+  AI: [
+    'AI SaaS', 'AI agents', 'LLM apps', 'AI infrastructure', 'AI tools',
+    'AI copilots', 'AI automation', 'AI analytics', 'AI workflow tools',
+    'AI search', 'AI content tools', 'AI support tools', 'AI for business',
+    'AI for developers'
+  ],
+  Talent: [
+    'Software jobs', 'Remote jobs', 'Startup hiring', 'Tech recruitment',
+    'Freelance talent', 'Internships', 'Cofounder matching', 'Technical hiring',
+    'Design hiring', 'Sales hiring', 'Product hiring', 'AI talent', 'Engineering talent'
+  ],
+  Hardware: [
+    'Consumer hardware', 'Enterprise hardware', 'IoT', 'Wearables', 'Smart devices',
+    'Electronics', 'Embedded systems', 'Robotics hardware', 'Semiconductor hardware',
+    'Drones', 'Sensors', 'Industrial hardware'
+  ],
+  Robotics: [
+    'Industrial robotics', 'Service robotics', 'AI robotics', 'Medical robotics',
+    'Agricultural robotics', 'Delivery robots', 'Automation robotics', 'Humanoid robotics',
+    'Robotic arms', 'Warehouse robotics', 'Defense robotics', 'Robotics software'
+  ],
+  Semiconductor: [
+    'Chip design', 'Fabless semiconductor', 'EDA tools', 'Chip manufacturing',
+    'Power semiconductors', 'RF chips', 'AI chips', 'Edge chips', 'Memory chips',
+    'SoC startups', 'Semiconductor equipment', 'Semiconductor materials'
+  ],
+  XR: [
+    'AR startups', 'VR startups', 'XR startups', 'MR startups', 'Spatial computing',
+    'Mixed reality', 'Immersive learning', 'Virtual training', 'Metaverse tools',
+    '3D platforms', 'Game engine tools', 'Vision hardware'
+  ],
+  DeepTech: [
+    'Quantum computing', 'Nanotech', 'Aerospace', 'Defense tech', 'Biotech',
+    'Medtech', 'Clean tech', 'Climate tech', 'Energy tech', 'Advanced manufacturing',
+    'Materials science', 'Research tools'
+  ],
+  BusinessModels: [
+    'Marketplace', 'Subscription', 'Usage-based SaaS', 'Licensing', 'Services + software',
+    'Freemium', 'Enterprise sales', 'Consumer app', 'Community platform',
+    'Agency-to-product', 'Productized service', 'Platform-as-a-service'
+  ]
+};
 
+// Flatten all categories for quick tag verification
+export const allFlatCategories = Object.values(startupCategories).flat();
+
+// Builders Data for Teams Page
 export const buildersData: Builder[] = [
   {
-    id: 'b1',
-    name: 'Ayesha Khan',
-    role: 'Computer Vision & Deep Learning Scientist',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-    skills: ['PyTorch', 'C++', 'Edge AI', 'TensorRT'],
-    field: 'AI',
-    city: 'Islamabad',
-    experience: 'Ex-Researcher at HEC Robotics Lab, 2 patents in edge object detection.',
-    bio: 'Forging real-time vision algorithms for agricultural drone swarms. Looking for a commercial-focused SaaS cofounder.',
-    matchScore: 98
+    id: "1",
+    name: "Zainab Chaudhry",
+    role: "AI Research Lead (Ex-NUST)",
+    field: "AI SaaS",
+    city: "Islamabad",
+    bio: "Building custom visual architectures for Pakistan's agricultural yield forecast mappings.",
+    experience: "3+ years PyTorch, OpenCV, Edge deployments",
+    skills: ["PyTorch", "Python", "Computer Vision", "FastAPI"],
+    matchScore: 98,
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80"
   },
   {
-    id: 'b2',
-    name: 'Zain Ahmed',
-    role: 'VLSI & Semiconductor Layout Engineer',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    skills: ['Verilog', 'ASIC Layout', 'FPGA Prototyping', 'SystemVerilog'],
-    field: 'Semiconductors',
-    city: 'Lahore',
-    experience: '5+ years in fabless design houses globally.',
-    bio: 'Designing a RISC-V based low-power edge processor customized for vernacular speech recognition systems. Looking for firmware experts and funding partners.',
-    matchScore: 95
+    id: "2",
+    name: "Taimoor Khan",
+    role: "VLSI Layout Lead",
+    field: "Semiconductors",
+    city: "Peshawar",
+    bio: "ASIC custom tape-out coordinator specializing in power optimization layers.",
+    experience: "5+ years SystemVerilog, FPGA verification",
+    skills: ["SystemVerilog", "Verilog", "FPGA", "C++"],
+    matchScore: 95,
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80"
   },
   {
-    id: 'b3',
-    name: 'Zahra Bilgrami',
-    role: 'Fintech Protocol Architect',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-    skills: ['Rust', 'Hyperledger', 'Go', 'gRPC'],
-    field: 'Fintech',
-    city: 'Karachi',
-    experience: 'Ex-Lead Architect at a major Middle East payment gateway.',
-    bio: 'Building offline-first micro-payment APIs tailored for Pakistans retail (Kiryana) stores. Seeking an operations expert with offline supply chain experience.',
-    matchScore: 92
-  },
-  {
-    id: 'b4',
-    name: 'Haris Mumtaz',
-    role: 'Robotics Control Systems Engineer',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-    skills: ['ROS2', 'RTOS', 'Python', 'SolidWorks'],
-    field: 'Robotics',
-    city: 'Peshawar',
-    experience: 'Winner of National Robotics Challenge 2025.',
-    bio: 'Developing self-navigating industrial warehouse carts for local textile mills. Need a business development partner with local manufacturing connections.',
-    matchScore: 89
-  },
-  {
-    id: 'b5',
-    name: 'Mariam Ali',
-    role: 'SaaS Growth & Product Designer',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80',
-    skills: ['Product Design', 'Next.js', 'B2B Marketing', 'Figma'],
-    field: 'SaaS',
-    city: 'Faisalabad',
-    experience: 'Designed and scaled 3 SaaS platforms with 10k+ monthly active users.',
-    bio: 'Creating an Urdu-first ERP system for small SME manufacturers. Looking for technical co-founders specializing in PostgreSQL and Node.js.',
-    matchScore: 91
-  },
-  {
-    id: 'b6',
-    name: 'Daniyal Mirza',
-    role: 'WebXR & Spatial Computing Creator',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80',
-    skills: ['Three.js', 'Unity', 'WebXR', 'React Three Fiber'],
-    field: 'AR/VR',
-    city: 'Rawalpindi',
-    experience: 'Ex-Spatial UI Consultant for international gaming studios.',
-    bio: 'Building browser-based digital twins for local real estate developments and interactive remote schools. Looking for a B2B sales partner.',
-    matchScore: 87
+    id: "3",
+    name: "Zarrar Ahmed",
+    role: "Robotics Firmware Architect",
+    field: "Robotics",
+    city: "Karachi",
+    bio: "Developing custom ROS2 guide frameworks for autonomous warehouse loaders.",
+    experience: "4+ years ROS2, C++, Real-Time Linux kernel tuning",
+    skills: ["ROS2", "C++", "Embedded Systems", "Linux"],
+    matchScore: 92,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
   }
 ];
 
-export const investorsData: Investor[] = [
-  {
-    id: 'i1',
-    name: 'Indus Valley Capital',
-    type: 'VC',
-    focus: ['B2B SaaS', 'Fintech', 'Logistics', 'Deep Tech'],
-    chequeSize: '$500k - $2M',
-    portfolioCount: 28,
-    description: 'Empowering Pakistani founders to build industry-defining companies and unlock the countrys digital economy.',
-    logo: 'IVC'
-  },
-  {
-    id: 'i2',
-    name: 'Sarmayacar',
-    type: 'VC',
-    focus: ['AI', 'Fintech', 'SaaS', 'Semiconductors'],
-    chequeSize: '$250k - $1.5M',
-    portfolioCount: 22,
-    description: 'Providing early-stage venture capital and active board support to clean-tech, fintech, and deep tech startups.',
-    logo: 'SMC'
-  },
-  {
-    id: 'i3',
-    name: 'Pakistan Startup Fund (PSF)',
-    type: 'Government Grant',
-    focus: ['Deep Tech', 'AgriTech', 'SaaS', 'AI', 'Export-oriented'],
-    chequeSize: 'PKR 10M - 50M',
-    portfolioCount: 45,
-    description: 'Federal fund by MoITT matching global VC investments to supercharge growth and mitigate early startup risk.',
-    logo: 'PSF'
-  },
-  {
-    id: 'i4',
-    name: 'Karavan',
-    type: 'Angel Network',
-    focus: ['B2C Commerce', 'Fintech', 'SaaS'],
-    chequeSize: '$50k - $300k',
-    portfolioCount: 18,
-    description: 'A close-knit network of overseas Pakistani angel investors supporting early pre-seed and seed-stage founders.',
-    logo: 'KVN'
-  },
-  {
-    id: 'i5',
-    name: 'Zayn Capital',
-    type: 'VC',
-    focus: ['Fintech', 'SaaS', 'B2B Marketplaces'],
-    chequeSize: '$200k - $1M',
-    portfolioCount: 31,
-    description: 'Investing in visionary teams across Pakistan, Bangladesh, and the MENA region with deep-touch operations support.',
-    logo: 'ZAYN'
-  }
-];
-
-export const partnershipsData: Partnership[] = [
-  {
-    id: 'p1',
-    name: 'Overseas Pakistani Tech Diaspora',
-    type: 'Diaspora Network',
-    entity: 'Silicon Valley & London Networks',
-    benefit: 'Direct access to FAANG Directors, CTOs, and global engineering mentors.',
-    activeOpportunities: 48,
-    icon: 'Globe'
-  },
-  {
-    id: 'p2',
-    name: 'Systems Limited Innovate Program',
-    type: 'Corporate Alliance',
-    entity: 'Systems Ltd (Pakistans largest IT exporter)',
-    benefit: 'SaaS licensing support, sandbox integration, and first-customer pilot channels.',
-    activeOpportunities: 12,
-    icon: 'Building'
-  },
-  {
-    id: 'p3',
-    name: 'HEC Research-to-Market Accelerator',
-    type: 'University Collab',
-    entity: 'Higher Education Commission (150+ Universities)',
-    benefit: 'Access to state-of-the-art university clean rooms, robotics labs, and Ph.D. co-investigators.',
-    activeOpportunities: 35,
-    icon: 'GraduationCap'
-  },
-  {
-    id: 'p4',
-    name: 'Pak-US Tech Bridge Initiative',
-    type: 'Venture Connection',
-    entity: 'Global Venture Alliance & MoITT',
-    benefit: 'Paid corporate exchange programs and incubation tracks in California.',
-    activeOpportunities: 8,
-    icon: 'Network'
-  }
-];
-
-export const govProgramsData: GovProgram[] = [
-  {
-    id: 'g1',
-    title: 'Pakistan Startup Fund (PSF) Matching Equity',
-    agency: 'Ministry of IT & Telecom (MoITT)',
-    fundingCap: 'Up to 30% of Venture Round (Max 50M PKR)',
-    eligibility: 'Secured term-sheet from an approved venture fund.',
-    deadline: 'Rolling Applications',
-    type: 'Grant'
-  },
-  {
-    id: 'g2',
-    title: 'HEC Technology Development Fund (TDF)',
-    agency: 'Higher Education Commission (HEC)',
-    fundingCap: 'Up to 14M PKR',
-    eligibility: 'Joint proposal by a university researcher and an industrial partner.',
-    deadline: 'August 15, 2026',
-    type: 'Grant'
-  },
-  {
-    id: 'g3',
-    title: 'PITB DeepTech Incubation Program',
-    agency: 'Punjab Information Technology Board',
-    fundingCap: 'Free R&D Space + 2M PKR Equity-Free Seed',
-    eligibility: 'Builders in AI, Robotics, or Semiconductors.',
-    deadline: 'June 30, 2026',
-    type: 'Incubator'
-  },
-  {
-    id: 'g4',
-    title: 'MoITT IT Export Remittance Tax Waiver',
-    agency: 'Ministry of IT & FBR',
-    fundingCap: '100% Tax Exemption on Global Remote Earnings',
-    eligibility: 'Registered freelancers, startups, and IT companies.',
-    deadline: 'Permanent (Valid till 2030)',
-    type: 'Subsidy'
-  }
-];
-
+// Jobs Data for Placements Page
 export const jobsData: Job[] = [
   {
-    id: 'j1',
-    title: 'Senior generative AI Engineer',
-    company: 'Markhor AI Solutions',
-    location: 'Karachi / Remote',
-    type: 'Remote',
-    salary: 'PKR 450,000 - 650,000 / mo',
-    skills: ['LlamaIndex', 'LangChain', 'FastAPI', 'Vector Databases'],
-    category: 'AI'
+    id: "j1",
+    title: "Edge Compiler Engineer",
+    company: "Markhor Edge Labs",
+    location: "Lahore (Remote)",
+    salary: "$1,800 - $3,200 / mo",
+    type: "Full-Time",
+    skills: ["LLVM", "C++", "RISC-V"],
+    category: "Semiconductors"
   },
   {
-    id: 'j2',
-    title: 'Embedded ROS Developer (Robotics)',
-    company: 'Indus Robotics Lab',
-    location: 'Peshawar',
-    type: 'Hybrid',
-    salary: 'PKR 350,000 - 500,000 / mo',
-    skills: ['C++', 'ROS2', 'Microcontrollers', 'RTOS'],
-    category: 'Robotics'
+    id: "j2",
+    title: "Urdu LLM Finetune Specialist",
+    company: "PakNLP Consortium",
+    location: "Islamabad (Hybrid)",
+    salary: "PKR 180k - 260k / mo",
+    type: "Full-Time",
+    skills: ["PyTorch", "HuggingFace", "LangChain"],
+    category: "AI"
   },
   {
-    id: 'j3',
-    title: 'RISC-V Compiler Optimization Specialist',
-    company: 'Taxila Semiconductor Corp',
-    location: 'Rawalpindi / Remote',
-    type: 'Remote',
-    salary: '$3,500 - $5,500 / mo',
-    skills: ['LLVM', 'RISC-V Assembly', 'C++', 'Compiler Theory'],
-    category: 'Semiconductors'
-  },
-  {
-    id: 'j4',
-    title: 'Lead Product Designer (B2B SaaS)',
-    company: 'Aura Fintech',
-    location: 'Lahore',
-    type: 'On-site',
-    salary: 'PKR 250,000 - 400,000 / mo',
-    skills: ['Figma', 'UI/UX Design', 'User Research', 'Tailwind'],
-    category: 'SaaS'
-  },
-  {
-    id: 'j5',
-    title: 'Fintech Smart-Contract Security Auditor',
-    company: 'Habib Ledger Group',
-    location: 'Karachi',
-    type: 'Hybrid',
-    salary: 'PKR 400,000 - 600,000 / mo',
-    skills: ['Rust', 'Solidity', 'Static Analysis', 'Formal Verification'],
-    category: 'Fintech'
+    id: "j3",
+    title: "Autonomous Path-Planning Developer",
+    company: "Textile Foundries Ltd",
+    location: "Karachi (On-site)",
+    salary: "PKR 140k - 190k / mo",
+    type: "Contract",
+    skills: ["ROS2", "Navigation2", "C++"],
+    category: "Robotics"
   }
 ];
 
+// Challenges Data
 export const challengesData: Challenge[] = [
   {
-    id: 'c1',
-    title: 'HEC Smart Agriculture AI Challenge',
-    postedBy: 'HEC & Ministry of National Food Security',
-    prizePool: 'PKR 5,000,000 + Government Procurement Contract',
-    rewardType: 'Procurement Slot',
-    participantsCount: 142,
-    daysLeft: 18,
-    category: 'AI & IoT',
-    description: 'Post-harvest crop wastage in Pakistan exceeds 35%. Build a low-cost localized computer vision / IoT solution that monitors humidity and fungal rot in grain silos and predicts shelf life in native local languages.',
-    problemStatement: 'Develop a highly-localized deep learning model trainable on edge hardware (Raspberry Pi) that operates offline and alerts farmers via SMS/audio in Punjabi, Sindhi, Pashto, and Urdu.'
+    id: "c1",
+    title: "RISC-V Vector Assembly Optimization",
+    category: "Semiconductors",
+    description: "Write assembly instruction vectors resolving standard float overheads for physical ASIC boards.",
+    problemStatement: "Optimize a float matrix dot product in SystemVerilog minimizing clock cycle layouts.",
+    prizePool: "PKR 1,500,000",
+    rewardType: "Gov Grant co-equity matching",
+    postedBy: "HEC & Ignite",
+    daysLeft: 12,
+    participantsCount: 48
   },
   {
-    id: 'c2',
-    title: 'Offline Digital Micro-Payment Protocol',
-    postedBy: 'PITB & National Bank of Pakistan Consortium',
-    prizePool: 'PKR 3,500,000 + Immediate Pilot in 5 Districts',
-    rewardType: 'Pilot Contract',
-    participantsCount: 88,
-    daysLeft: 25,
-    category: 'Fintech',
-    description: 'Millions of rural retailers lack stable 4G/3G connectivity, preventing the adoption of standard UPI/QR payments. We need a secure, cryptographically validated offline-first peer-to-peer transaction protocol.',
-    problemStatement: 'Propose a secure offline digital token standard using Bluetooth Low Energy (BLE) or encrypted acoustic waves (sound-based payments) that integrates with state-authorized banks once an internet connection is established.'
+    id: "c2",
+    title: "Urdu Voice RAG Interface Design",
+    category: "AI",
+    description: "Implement low-latency offline Urdu speech parsing on micro-controllers.",
+    problemStatement: "Compress standard audio streams to match HuggingFace weights under 150ms delay boundaries.",
+    prizePool: "PKR 800,000",
+    rewardType: "Startup Procurement Pilot",
+    postedBy: "Ignite Pakistan",
+    daysLeft: 8,
+    participantsCount: 32
+  }
+];
+
+// Sovereign Investors (used in funding calculator page)
+export const investorsData = [
+  {
+    id: "ivc",
+    logo: "IVC",
+    type: "Venture Capital",
+    name: "Indus Valley Capital",
+    chequeSize: "$500,000 - $2,000,000",
+    description: "Regional lead pre-seed and seed assets empowering tech startups in Pakistan.",
+    focus: ["SaaS", "Fintech", "Marketplaces"],
+    portfolioCount: 28
   },
   {
-    id: 'c3',
-    title: 'RISC-V Local IoT Chip Implementation',
-    postedBy: 'Pakistani Semiconductor Consortium & MoITT',
-    prizePool: 'PKR 10,000,000 + Tape-Out Sponsorship (Full Funding)',
-    rewardType: 'Equity Investment',
-    participantsCount: 41,
-    daysLeft: 42,
-    category: 'Semiconductors',
-    description: 'Pakistan spends billions importing low-end smart meter and agricultural telemetry microchips. Design an ultra-low power, custom RISC-V microcontroller with onboard cryptographic acceleration.',
-    problemStatement: 'Submit fully validated RTL designs in SystemVerilog. Winning designs will get fully funded TSMC tape-out through the national semiconductor program.'
+    id: "smc",
+    logo: "SMC",
+    type: "Venture Capital",
+    name: "Sarmayacar",
+    chequeSize: "$250,000 - $1,500,000",
+    description: "VISIONARY seed funds supporting deep technology, B2B SaaS, and local micro-chips.",
+    focus: ["AI", "SaaS", "Clean Tech"],
+    portfolioCount: 22
+  }
+];
+
+// Government Access Grants
+export const govProgramsData: GovProgram[] = [
+  {
+    id: "g1",
+    title: "National Semiconductor Sandbox",
+    agency: "HEC & PITB",
+    fundingCap: "PKR 45,000,000",
+    eligibility: "Must hold local university collaboration and complete compiler simulation tests.",
+    deadline: "June 30, 2026",
+    type: "FABLESS GRANT"
+  },
+  {
+    id: "g2",
+    title: "Ignite Deep Tech Accelerator",
+    agency: "Ministry of IT & Ignite",
+    fundingCap: "PKR 15,000,000",
+    eligibility: "Seed setups building custom hardware layout microprocessors or LLM model pipelines.",
+    deadline: "July 15, 2026",
+    type: "MATCHING GRANT"
+  }
+];
+
+// Partnerships Data
+export const partnershipsData: Partnership[] = [
+  {
+    id: "p1",
+    name: "Silicon Valley Diaspora Network",
+    entity: "Overseas Pakistani Technical Alliance (US)",
+    benefit: "Weekly direct layout feedback with engineers from AMD, NVIDIA, and Intel.",
+    type: "Mentorship",
+    activeOpportunities: 14,
+    icon: "Globe"
+  },
+  {
+    id: "p2",
+    name: "Systems Ltd Sandbox Alliance",
+    entity: "Systems Limited Pakistan",
+    benefit: "Pre-vetted cofounders unlock SaaS developer licenses and PITB server clusters.",
+    type: "Corporate Alliance",
+    activeOpportunities: 8,
+    icon: "Building"
+  }
+];
+
+// Initial Startups Data
+export const startupsData: Startup[] = [
+  {
+    id: 's1',
+    name: 'Markhor Edge Labs',
+    tagline: 'RISC-V chip acceleration for local device edge inference.',
+    primaryIndustry: 'Semiconductor hardware',
+    secondaryIndustries: ['AI chips', 'Deep Tech', 'IoT'],
+    stage: 'Seed',
+    location: 'Lahore, Pakistan',
+    fundingStage: 'Equity Raised',
+    skillsNeeded: ['SystemVerilog', 'LLVM compiler', 'Hardware verification'],
+    rolesAvailable: ['Senior VLSI Engineer', 'Compiler Developer'],
+    companyType: 'Fabless semiconductor',
+    techStack: ['Verilog', 'C++', 'Python', 'FPGA'],
+    logo: 'MEL',
+    description: 'We are designing energy-efficient RISC-V co-processors designed for localized deep learning tasks on remote sensors without network relays.'
+  },
+  {
+    id: 's2',
+    name: 'AgriSense IoT',
+    tagline: 'Urdu-first smart crop rot prediction using computer vision drones.',
+    primaryIndustry: 'Agricultural robotics',
+    secondaryIndustries: ['AI SaaS', 'Robotics hardware', 'Drones', 'Sensors'],
+    stage: 'Pre-seed',
+    location: 'Islamabad, Pakistan',
+    fundingStage: 'Grant Match',
+    skillsNeeded: ['Edge AI', 'Next.js', 'B2B Sales'],
+    rolesAvailable: ['Cofounder (Growth & Business Dev)', 'Fullstack Engineer'],
+    companyType: 'AI + hardware',
+    techStack: ['PyTorch', 'ROS2', 'Next.js', 'FastAPI'],
+    logo: 'AGS',
+    description: 'AgriSense deploys smart agricultural sensors and automated drone sweeps to predict post-harvest silo wastage, providing offline Urdu audio notifications to local farmers.'
+  }
+];
+
+// Initial Freelance Projects Data
+export const freelanceProjectsData: FreelanceProject[] = [
+  {
+    id: 'f1',
+    title: 'RISC-V LLVM Compiler Optimization',
+    client: 'Markhor Edge Labs',
+    budget: '$3,500',
+    budgetType: 'Fixed',
+    duration: '2 Months',
+    primaryIndustry: 'EDA tools',
+    secondaryIndustries: ['AI chips', 'Developer tools'],
+    skills: ['LLVM', 'C++', 'RISC-V Assembly'],
+    description: 'Looking for a specialized compiler engineer to optimize customized vector instruction translations on a TSMC tape-out chip blueprint.',
+    postedDate: '2 Days ago'
+  },
+  {
+    id: 'f2',
+    title: 'Urdu RAG LangChain System Setup',
+    client: 'National NLP Consortium',
+    budget: 'PKR 250,000',
+    budgetType: 'Fixed',
+    duration: '3 Weeks',
+    primaryIndustry: 'LLM apps',
+    secondaryIndustries: ['AI agents', 'AI search'],
+    skills: ['LangChain', 'LlamaIndex', 'UrduNLP', 'FastAPI'],
+    description: 'Implement a highly-optimized vector database pipeline supporting custom Urdu vocabulary embeddings and multi-intent parsing filters.',
+    postedDate: '1 Day ago'
+  }
+];
+
+// Individual Investors
+export const individualInvestorsData: IndividualInvestor[] = [
+  {
+    id: 'angel1',
+    name: 'Dr. Kamran Malik',
+    title: 'VP of Hardware Engineering at major Silicon Valley Chipmaker',
+    diasporaLocation: 'San Jose, California',
+    chequeRange: '$25,000 - $75,000',
+    primaryFocus: 'Chip design',
+    secondaryFocus: ['Fabless semiconductor', 'AI chips', 'Deep Tech'],
+    skillsOffered: ['VLSI tape-out reviews', 'US market introduction', 'Core semiconductor manufacturing relationships'],
+    portfolioCount: 8,
+    bio: 'Ex-Intel Principal Fellow with 20+ years in ASIC fabrication. Passionate about establishing Pakistans local fabless semiconductor ecosystem.',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80'
+  },
+  {
+    id: 'angel2',
+    name: 'Sobia Haris',
+    title: 'Director of Product at London Fintech Unicorn',
+    diasporaLocation: 'London, UK',
+    chequeRange: '£15,000 - £40,000',
+    primaryFocus: 'Fintech software',
+    secondaryFocus: ['SaaS', 'B2B software', 'Marketplace software'],
+    skillsOffered: ['Product roadmap scaling', 'UK sandboxes integration', 'VC seed introductions'],
+    portfolioCount: 6,
+    bio: 'Helping deep tech and fintech builders design highly optimized commercial user flows. Active advisor to PITB incubation cohorts.',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80'
+  }
+];
+
+// Company Investors
+export const companyInvestorsData: CompanyInvestor[] = [
+  {
+    id: 'vc1',
+    name: 'Indus Valley Capital',
+    companyType: 'Venture Capital',
+    chequeRange: '$500k - $2M',
+    primaryFocus: 'B2B SaaS',
+    secondaryFocus: ['Fintech software', 'Logistics', 'Deep Tech', 'AI SaaS'],
+    portfolioCount: 28,
+    description: 'Empowering early stage Pakistani founders to build epoch-defining technology companies.',
+    logo: 'IVC',
+    website: 'https://indusvalley.vc',
+    leadPartners: ['Aatif Awan', 'Rabeel Warraich']
+  },
+  {
+    id: 'vc2',
+    name: 'Sarmayacar',
+    companyType: 'Venture Capital',
+    chequeRange: '$250k - $1.5M',
+    primaryFocus: 'AI',
+    secondaryFocus: ['Fintech software', 'SaaS', 'Semiconductor hardware', 'Clean tech'],
+    portfolioCount: 22,
+    description: 'Supporting visionary entrepreneurs with early-stage venture assets and active board alignment operations.',
+    logo: 'SMC',
+    website: 'https://sarmayacar.com',
+    leadPartners: ['Bernhard Klemen', 'Faisal Aftab']
+  },
+  {
+    id: 'vc3',
+    name: 'Pakistan Startup Fund (PSF)',
+    companyType: 'Government Fund',
+    chequeRange: 'PKR 10M - 50M',
+    primaryFocus: 'Deep Tech',
+    secondaryFocus: ['Climate tech', 'AgriTech', 'SaaS', 'AI infrastructure'],
+    portfolioCount: 45,
+    description: 'Federal fund sponsored by MoITT matching global venture investments to eliminate early-stage deep-tech startup risks.',
+    logo: 'PSF',
+    website: 'https://moitt.gov.pk',
+    leadPartners: ['Minister of IT & Telecom', 'CEO Ignite']
   }
 ];
