@@ -169,12 +169,16 @@ export default function FeedPage() {
                           </div>
                           <div className="space-y-1.5">
                             {allRoles.map(role => (
-                              <label key={role} className="flex items-center gap-2 cursor-pointer group">
+                              <button 
+                                key={role} 
+                                onClick={() => toggleRole(role)}
+                                className="flex items-center gap-2 cursor-pointer group w-full text-left bg-transparent border-none focus:outline-none"
+                              >
                                 <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${selectedRoles.includes(role) ? "bg-[#0a66c2] border-[#0a66c2]" : "bg-slate-900 border-[#38434f] group-hover:border-white/30"}`}>
                                   {selectedRoles.includes(role) && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
                                 </div>
                                 <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-all">{role}</span>
-                              </label>
+                              </button>
                             ))}
                           </div>
                         </motion.div>
@@ -206,12 +210,16 @@ export default function FeedPage() {
                           </div>
                           <div className="space-y-1.5">
                             {allCategories.map(cat => (
-                              <label key={cat} className="flex items-center gap-2 cursor-pointer group">
+                              <button 
+                                key={cat} 
+                                onClick={() => toggleCategory(cat)}
+                                className="flex items-center gap-2 cursor-pointer group w-full text-left bg-transparent border-none focus:outline-none"
+                              >
                                 <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${selectedCategories.includes(cat) ? "bg-[#0a66c2] border-[#0a66c2]" : "bg-slate-900 border-[#38434f] group-hover:border-white/30"}`}>
                                   {selectedCategories.includes(cat) && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
                                 </div>
                                 <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-all">{cat}</span>
-                              </label>
+                              </button>
                             ))}
                           </div>
                         </motion.div>

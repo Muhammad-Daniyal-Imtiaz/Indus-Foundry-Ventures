@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Building2, 
-  Sparkles, 
-  Search, 
-  Coins, 
-  ArrowRight, 
-  CheckCircle2, 
-  ExternalLink, 
-  GitBranch, 
-  DollarSign, 
-  TrendingUp, 
-  Eye, 
-  ShieldCheck, 
-  Plus, 
-  X, 
+import {
+  Building2,
+  Sparkles,
+  Search,
+  Coins,
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink,
+  GitBranch,
+  DollarSign,
+  TrendingUp,
+  Eye,
+  ShieldCheck,
+  Plus,
+  X,
   Terminal,
   Activity,
   Layers,
@@ -113,7 +113,7 @@ export default function MVPMarketplace() {
   const [selectedReason, setSelectedReason] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [inquireMvp, setInquireMvp] = useState<MVP | null>(null);
-  
+
   // Listing Modal State
   const [showListModal, setShowListModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -126,7 +126,7 @@ export default function MVPMarketplace() {
   const [newTech, setNewTech] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [repoLink, setRepoLink] = useState("");
-  
+
   const [inquiryName, setInquiryName] = useState("");
   const [inquiryEmail, setInquiryEmail] = useState("");
   const [inquiryOffer, setInquiryOffer] = useState("");
@@ -177,7 +177,7 @@ export default function MVPMarketplace() {
 
     setMvps([newItem, ...mvps]);
     setShowListModal(false);
-    
+
     // Reset form
     setNewTitle("");
     setNewTagline("");
@@ -204,9 +204,9 @@ export default function MVPMarketplace() {
   const filteredMVPs = mvps.filter(m => {
     const matchesCategory = selectedCategory === "All" || m.category === selectedCategory;
     const matchesReason = selectedReason === "All" || m.reason === selectedReason;
-    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          m.tagline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          m.techStack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.tagline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.techStack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesReason && matchesSearch;
   });
 
@@ -217,7 +217,7 @@ export default function MVPMarketplace() {
       <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/5 blur-[140px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        
+
         {/* Page Banner */}
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-4">
@@ -239,7 +239,7 @@ export default function MVPMarketplace() {
             </div>
 
             <div>
-              <button 
+              <button
                 onClick={() => setShowListModal(true)}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs px-5 py-3 rounded-xl transition-all shadow-lg shadow-emerald-500/15 cursor-pointer uppercase tracking-wider"
               >
@@ -257,9 +257,9 @@ export default function MVPMarketplace() {
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500">
               <Search className="w-4 h-4" />
             </div>
-            <input 
-              type="text" 
-              placeholder="Search MVP name, keywords, or tech stack..." 
+            <input
+              type="text"
+              placeholder="Search MVP name, keywords, or tech stack..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#0c111d] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-10 py-3.5 rounded-xl outline-none transition-all placeholder:text-slate-500 font-semibold"
@@ -305,7 +305,7 @@ export default function MVPMarketplace() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredMVPs.map((m) => (
-              <div 
+              <div
                 key={m.id}
                 className="bg-[#0c111d] border border-white/5 hover:border-white/10 rounded-2xl p-5 transition-all flex flex-col justify-between group relative overflow-hidden"
               >
@@ -341,13 +341,13 @@ export default function MVPMarketplace() {
 
                   {/* Screenshot mockup */}
                   <div className="w-full h-36 rounded-xl overflow-hidden mb-4 border border-white/5 relative">
-                    <img 
-                      src={m.screenshot} 
+                    <img
+                      src={m.screenshot}
                       alt={m.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
-                    
+
                     {/* Verification Badges inside Screenshot */}
                     <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5">
                       {m.ownershipVerified && (
@@ -396,7 +396,7 @@ export default function MVPMarketplace() {
                 {/* Card Action footer */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                   <span className="text-[10px] text-slate-500 font-bold">Assisted Escrow Transfers Supported</span>
-                  <button 
+                  <button
                     onClick={() => setInquireMvp(m)}
                     className="inline-flex items-center gap-1.5 text-[10px] font-black text-slate-950 bg-white group-hover:bg-emerald-400 group-hover:text-slate-950 hover:scale-102 px-3.5 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-wider"
                   >
@@ -415,8 +415,8 @@ export default function MVPMarketplace() {
         {showListModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={() => setShowListModal(false)}></div>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -432,9 +432,9 @@ export default function MVPMarketplace() {
               <form onSubmit={handleListMvp} className="space-y-4 text-xs font-semibold">
                 <div>
                   <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Product Name *</label>
-                  <input 
-                    type="text" 
-                    required 
+                  <input
+                    type="text"
+                    required
                     placeholder="e.g. AgriFlow AI"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
@@ -444,9 +444,9 @@ export default function MVPMarketplace() {
 
                 <div>
                   <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">One-line Pitch *</label>
-                  <input 
-                    type="text" 
-                    required 
+                  <input
+                    type="text"
+                    required
                     placeholder="e.g. Satellites diagnostics for high crop yield."
                     value={newTagline}
                     onChange={(e) => setNewTagline(e.target.value)}
@@ -484,8 +484,8 @@ export default function MVPMarketplace() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Asking Price ($)</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. $1,500 or Offers"
                       value={newPrice}
                       onChange={(e) => setNewPrice(e.target.value)}
@@ -494,8 +494,8 @@ export default function MVPMarketplace() {
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Monthly Revenue ($)</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. $200/mo"
                       value={newRevenue}
                       onChange={(e) => setNewRevenue(e.target.value)}
@@ -504,8 +504,8 @@ export default function MVPMarketplace() {
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Traction / Users</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. 150 active"
                       value={newUsers}
                       onChange={(e) => setNewUsers(e.target.value)}
@@ -520,8 +520,8 @@ export default function MVPMarketplace() {
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500">
                       <GitBranch className="w-4 h-4" />
                     </div>
-                    <input 
-                      type="url" 
+                    <input
+                      type="url"
                       placeholder="e.g. https://github.com/username/project"
                       value={repoLink}
                       onChange={(e) => setRepoLink(e.target.value)}
@@ -532,8 +532,8 @@ export default function MVPMarketplace() {
 
                 <div>
                   <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Tech Stack (comma separated)</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="e.g. React, Next.js, Python"
                     value={newTech}
                     onChange={(e) => setNewTech(e.target.value)}
@@ -543,7 +543,7 @@ export default function MVPMarketplace() {
 
                 <div>
                   <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Product Description</label>
-                  <textarea 
+                  <textarea
                     rows={3}
                     placeholder="Describe how it works, active databases, assets included (domain, hosting details)..."
                     value={newDesc}
@@ -560,7 +560,7 @@ export default function MVPMarketplace() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs py-3 rounded-xl transition-all uppercase tracking-wider cursor-pointer"
                 >
@@ -577,8 +577,8 @@ export default function MVPMarketplace() {
         {inquireMvp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={() => setInquireMvp(null)}></div>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -621,9 +621,9 @@ export default function MVPMarketplace() {
                   <form onSubmit={handleSendInquiry} className="space-y-4 text-xs font-semibold">
                     <div>
                       <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Your Full Name</label>
-                      <input 
-                        type="text" 
-                        required 
+                      <input
+                        type="text"
+                        required
                         placeholder="e.g. Daniyal Imtiaz"
                         value={inquiryName}
                         onChange={(e) => setInquiryName(e.target.value)}
@@ -633,9 +633,9 @@ export default function MVPMarketplace() {
 
                     <div>
                       <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Your Email</label>
-                      <input 
-                        type="email" 
-                        required 
+                      <input
+                        type="email"
+                        required
                         placeholder="e.g. daniyal@example.com"
                         value={inquiryEmail}
                         onChange={(e) => setInquiryEmail(e.target.value)}
@@ -645,7 +645,7 @@ export default function MVPMarketplace() {
 
                     <div>
                       <label className="block text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Offer / Message to Seller</label>
-                      <textarea 
+                      <textarea
                         rows={3}
                         placeholder="Describe your offer amount, or outline your interest in taking over the product codebase..."
                         value={inquiryOffer}
@@ -662,7 +662,7 @@ export default function MVPMarketplace() {
                       </div>
                     </div>
 
-                    <button 
+                    <button
                       type="submit"
                       className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs py-3 rounded-xl transition-all uppercase tracking-wider cursor-pointer"
                     >
