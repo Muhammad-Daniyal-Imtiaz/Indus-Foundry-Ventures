@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -12,14 +12,46 @@ import {
   TrendingUp,
   X,
   CheckCircle2,
-  Terminal
+  Terminal,
+  MapPin,
+  Filter
 } from "lucide-react";
 
-import { companyInvestorsData, CompanyInvestor } from "../../data";
+import rawInvestors from "../investors.json";
+
+interface Investor {
+  id: string;
+  name: string;
+  website: string;
+  hq: string;
+  countries: string;
+  stage: string;
+  thesis: string;
+  type: string;
+  minCheque: number | null;
+  maxCheque: number | null;
+}
+
+// Helper to format cheque sizes
+function formatCheque(min: number | null, max: number | null) {
+  if (min === null && max === null) return "Open Ticket";
+  const fmt = (num: number) => {
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (num >= 1000) return `$${(num / 1000).toFixed(0)}k`;
+    return `$${num}`;
+  };
+  if (min !== null && max !== null) return `${fmt(min)} - ${fmt(max)}`;
+  if (min !== null) return `Min: ${fmt(min)}`;
+  if (max !== null) return `Max: ${fmt(max)}`;
+  return "Open Ticket";
+}
 
 export default function CompanyInvestorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeVC, setActiveVC] = useState<CompanyInvestor | null>(null);
+  const [showPakOnly, setShowPakOnly] = useState(true);
+  const [selectedType, setSelectedType] = useState("All");
+  
+  const [activeVC, setActiveVC] = useState<Investor | null>(null);
   
   // Pitch Wizard States
   const [pitchStep, setPitchStep] = useState(1);
@@ -31,11 +63,36 @@ export default function CompanyInvestorsPage() {
   });
   const [pitchScore, setPitchScore] = useState<any>(null);
 
-  const filteredCompanies = companyInvestorsData.filter(c => {
-    return c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           c.companyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           c.primaryFocus.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // Filter raw list to only company/institutional VCs
+  const companyInvestors = useMemo(() => {
+    const corporateTypes = ["VC", "Family office", "PE fund", "Corporate VC", "Public fund", "Revenue-based"];
+    return (rawInvestors as Investor[]).filter(inv => corporateTypes.includes(inv.type));
+  }, []);
+
+  // Compute stats
+  const pakCompaniesCount = useMemo(() => {
+    return companyInvestors.filter(c => String(c.countries || '').toLowerCase().includes("pakistan")).length;
+  }, [companyInvestors]);
+
+  // Apply filters
+  const filteredCompanies = useMemo(() => {
+    return companyInvestors.filter(c => {
+      const nameStr = String(c.name || '');
+      const hqStr = String(c.hq || '');
+      const thesisStr = String(c.thesis || '');
+      const countriesStr = String(c.countries || '');
+
+      const matchesSearch = 
+        nameStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        hqStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        thesisStr.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesPak = !showPakOnly || countriesStr.toLowerCase().includes("pakistan");
+      const matchesType = selectedType === "All" || c.type === selectedType;
+
+      return matchesSearch && matchesPak && matchesType;
+    });
+  }, [companyInvestors, searchTerm, showPakOnly, selectedType]);
 
   const handleFundPitch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,94 +122,161 @@ export default function CompanyInvestorsPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern overflow-hidden">
+    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern overflow-hidden font-sans">
       {/* Patriotic Tech Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/6 blur-[140px] pointer-events-none animate-pulse-glow"></div>
       <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/5 blur-[140px] pointer-events-none"></div>
-      <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] rounded-full bg-white/2 blur-[150px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Banner Section */}
         <div className="mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-mono text-[10px] font-bold border border-cyan-500/20 mb-4">
-            <Building2 className="w-3.5 h-3.5" />
-            INVESTMENT PROTOCOLS / INSTITUTIONAL
+          <div className="flex items-center gap-2 mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-mono text-[10px] font-bold border border-cyan-500/20 uppercase tracking-widest">
+              <Building2 className="w-3.5 h-3.5" />
+              VC Protocols / Institutional Funds
+            </span>
+            <span className="text-[10px] text-slate-500 font-bold font-mono uppercase tracking-widest border border-white/5 px-2.5 py-0.5 rounded-md bg-white/[0.02]">
+              Real OpenVC Dataset
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-            Venture Capital & Corporate Funds
+
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white uppercase">
+            Venture Capital & <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-600">Corporate Funds</span>
           </h1>
-          <p className="text-slate-400 text-sm mt-2 max-w-xl">
-            Submit unified seed and matching pre-equity applications to regional VCs, sovereign seed agencies, and FBR IT export compliant family offices.
+          <p className="text-slate-400 text-xs sm:text-sm mt-3 max-w-2xl leading-relaxed font-semibold">
+            Submit unified pre-seed matching equity applications directly to regional VCs, sovereign wealth funds, PITB-compliant family offices, and export funds.
           </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-8">
-          <div className="relative flex-1 max-w-md">
+        {/* Filter Toolbar */}
+        <div className="mb-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
+          {/* Search Bar */}
+          <div className="lg:col-span-2 relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Search VCs by focus or type (e.g. Sovereign, B2B SaaS)..."
+              placeholder="Search VCs by name, thesis, or headquarters location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none"
+              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-[#0c111d] border border-white/5 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-cyan-500/30 transition-all outline-none"
             />
           </div>
+
+          {/* Type Selector */}
+          <div>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full bg-[#0c111d] border border-white/5 focus:border-cyan-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
+            >
+              <option value="All">All VC Types</option>
+              <option value="VC">Venture Capital (VC)</option>
+              <option value="Family office">Family Offices</option>
+              <option value="PE fund">Private Equity (PE)</option>
+              <option value="Corporate VC">Corporate VCs</option>
+              <option value="Public fund">Sovereign / Public Funds</option>
+              <option value="Revenue-based">Revenue-Based Funds</option>
+            </select>
+          </div>
+
+          {/* Pakistan Toggle */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#0c111d] border border-white/5 h-full">
+            <span className="text-xs text-slate-400 font-bold">Invest in Pakistan</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={showPakOnly}
+                onChange={() => setShowPakOnly(!showPakOnly)}
+                className="sr-only peer" 
+              />
+              <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950 peer-checked:after:border-emerald-500"></div>
+            </label>
+          </div>
+        </div>
+
+        {/* Selected parameters summary */}
+        <div className="mb-6 flex justify-between items-center text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+          <span>Found {filteredCompanies.length} Match{filteredCompanies.length !== 1 && "es"}</span>
+          {showPakOnly && <span>Showing {pakCompaniesCount} Pakistan-Active VCs</span>}
         </div>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {filteredCompanies.map(company => (
+          {filteredCompanies.slice(0, 100).map(company => (
             <div 
               key={company.id}
-              className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-all flex flex-col justify-between"
+              className="bg-[#0c111d] border border-white/5 hover:border-cyan-500/20 rounded-2xl p-6 transition-all flex flex-col justify-between group relative overflow-hidden text-xs"
             >
+              {/* Top background accent */}
+              <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-cyan-500/2 blur-[30px] pointer-events-none group-hover:bg-cyan-500/6 transition-all"></div>
+
               <div>
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center font-black text-cyan-400 font-mono text-base tracking-tighter">
-                    {company.logo}
+                  <div className="w-10 h-10 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-center font-black text-cyan-400 font-mono text-xs tracking-tighter">
+                    {company.name.substring(0, 2).toUpperCase()}
                   </div>
-                  <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-900 border border-white/5 text-slate-400 shrink-0">
-                    {company.companyType}
+                  <span className="text-[9.5px] font-bold font-mono px-2 py-0.5 rounded bg-slate-950 border border-white/5 text-slate-400 shrink-0">
+                    {company.type}
                   </span>
                 </div>
 
-                <h4 className="font-extrabold text-base text-white tracking-wide mb-1">{company.name}</h4>
-                <p className="text-xs text-slate-400 font-semibold mb-3">Target Tickets: <span className="text-cyan-400 font-extrabold font-mono">{company.chequeRange}</span></p>
-                <p className="text-xs text-slate-300 leading-relaxed mb-4">{company.description}</p>
-
-                {/* Lead partners */}
-                <div className="mb-4 text-xs">
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Lead Investment Partners</p>
-                  <p className="text-slate-300 font-bold">{company.leadPartners.join(', ')}</p>
+                <h4 className="font-extrabold text-sm text-white tracking-wide mb-1 uppercase group-hover:text-cyan-400 transition-all">{company.name}</h4>
+                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mb-3">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  {company.hq || "Global HQ"}
                 </div>
 
-                {/* Focus areas */}
-                <div className="mb-6">
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">Investment Mandate</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="text-[10px] font-bold font-mono bg-cyan-500/10 text-cyan-400 px-2.5 py-0.5 rounded border border-cyan-500/20">
-                      {company.primaryFocus}
-                    </span>
-                    {company.secondaryFocus.map((sec, idx) => (
-                      <span key={idx} className="text-[10px] font-bold font-mono bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-white/5">
-                        {sec}
+                <p className="text-slate-400 font-semibold mb-3">Target Tickets: <span className="text-cyan-400 font-extrabold font-mono">{formatCheque(company.minCheque, company.maxCheque)}</span></p>
+                
+                <div className="p-3 bg-slate-950/50 border border-white/5 rounded-xl mb-4 font-semibold leading-relaxed">
+                  <p className="text-slate-500 block font-mono text-[9px] uppercase tracking-wider mb-1">Investment Thesis</p>
+                  <p className="text-slate-300">
+                    {company.thesis || "Pre-seed matching equity and seed venture programs globally."}
+                  </p>
+                </div>
+
+                {/* Country scope */}
+                <div className="mb-4">
+                  <span className="text-slate-500 block font-mono text-[9px] uppercase tracking-wider mb-1.5">Target Countries</span>
+                  <div className="flex flex-wrap gap-1">
+                    {company.countries.split(",").slice(0, 3).map((country, idx) => (
+                      <span key={idx} className="text-[9px] font-bold font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-slate-300">
+                        {country.trim()}
                       </span>
                     ))}
+                    {company.countries.split(",").length > 3 && (
+                      <span className="text-[9px] font-bold font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-slate-500">
+                        +{company.countries.split(",").length - 3} More
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {/* Stage scope */}
+                {company.stage && (
+                  <div className="mb-6">
+                    <span className="text-slate-500 block font-mono text-[9px] uppercase tracking-wider mb-1.5">Active Stages</span>
+                    <div className="flex flex-wrap gap-1">
+                      {company.stage.split(",").slice(0, 3).map((stg, idx) => (
+                        <span key={idx} className="text-[9px] font-bold font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-white/5">
+                          {stg.replace(/^\d+\.\s*/, "").trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
-                <div className="flex items-center justify-between pt-4 border-t border-white/5 text-xs">
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
                   <a 
                     href={company.website} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex items-center gap-1 text-slate-400 hover:text-white font-semibold transition-all"
+                    className="flex items-center gap-1.5 text-slate-500 hover:text-white font-bold transition-all uppercase tracking-wider text-[10px]"
                   >
-                    <Globe className="w-4 h-4" />
+                    <Globe className="w-3.5 h-3.5" />
                     Website
                   </a>
 
@@ -162,7 +286,7 @@ export default function CompanyInvestorsPage() {
                       setPitchStep(1);
                       setPitchScore(null);
                     }}
-                    className="bg-slate-900 border border-white/10 hover:border-transparent hover:bg-cyan-500 hover:text-slate-950 font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                    className="bg-slate-900 border border-white/10 hover:border-transparent hover:bg-cyan-500 hover:text-slate-950 font-black py-2 px-4 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider text-[9px]"
                   >
                     <TrendingUp className="w-3.5 h-3.5" />
                     Apply for Funding
@@ -179,47 +303,47 @@ export default function CompanyInvestorsPage() {
       <AnimatePresence>
         {activeVC && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-[#020408]/85 backdrop-blur-sm cursor-pointer" onClick={() => setActiveVC(null)}></div>
+            <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm cursor-pointer" onClick={() => setActiveVC(null)}></div>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-panel p-6 rounded-2xl border border-cyan-500/20 max-w-lg w-full relative z-10 shadow-2xl"
+              className="bg-[#0c111d] border border-white/10 p-6 rounded-2xl max-w-lg w-full relative z-10 shadow-2xl"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="font-extrabold text-base text-white tracking-wide flex items-center gap-2">
+                  <h3 className="font-black text-sm sm:text-base text-white tracking-wide flex items-center gap-2 uppercase">
                     <Building2 className="w-5 h-5 text-cyan-400" />
                     Venture Pitch Workbench
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5">Target: {activeVC.name}</p>
+                  <p className="text-[10px] text-slate-400 font-bold tracking-wide mt-0.5 uppercase">Target Fund: {activeVC.name}</p>
                 </div>
-                <button onClick={() => setActiveVC(null)} className="text-slate-400 hover:text-white">
-                  <X className="w-4 h-4" />
+                <button onClick={() => setActiveVC(null)} className="text-slate-400 hover:text-white cursor-pointer p-0.5">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               {pitchStep === 1 && (
-                <form onSubmit={handleFundPitch} className="space-y-4">
+                <form onSubmit={handleFundPitch} className="space-y-4 text-xs font-semibold">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Innovation Scope / Startup parameters</label>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Innovation Scope / Startup parameters</label>
                     <textarea
                       required
                       rows={3}
                       placeholder="Detail your agricultural robotics navigation algorithm or RISC-V co-processor..."
                       value={pitchData.idea}
                       onChange={(e) => setPitchData(prev => ({ ...prev, idea: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500/50 resize-none font-medium leading-relaxed"
+                      className="w-full p-3 rounded-lg bg-[#05070c] border border-white/5 text-white focus:outline-none focus:border-cyan-500/30 resize-none leading-relaxed font-semibold"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Primary Tech Tag</label>
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Primary Tech Tag</label>
                       <select 
                         value={pitchData.tech}
                         onChange={(e) => setPitchData(prev => ({ ...prev, tech: e.target.value }))}
-                        className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none"
+                        className="w-full p-3 rounded-lg bg-[#05070c] border border-white/5 text-white focus:outline-none focus:border-cyan-500/30 cursor-pointer font-bold"
                       >
                         <option value="AI">AI / Deep Learning</option>
                         <option value="Semiconductors">Semiconductors</option>
@@ -231,11 +355,11 @@ export default function CompanyInvestorsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Founders Count</label>
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Founders Count</label>
                       <select
                         value={pitchData.teamSize}
                         onChange={(e) => setPitchData(prev => ({ ...prev, teamSize: e.target.value }))}
-                        className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none"
+                        className="w-full p-3 rounded-lg bg-[#05070c] border border-white/5 text-white focus:outline-none focus:border-cyan-500/30 cursor-pointer font-bold"
                       >
                         <option value="1">Solo Founder (1)</option>
                         <option value="2">Co-founders (2)</option>
@@ -246,11 +370,11 @@ export default function CompanyInvestorsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Cheque size</label>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Cheque size</label>
                     <select
                       value={pitchData.fundingGoal}
                       onChange={(e) => setPitchData(prev => ({ ...prev, fundingGoal: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none"
+                      className="w-full p-3 rounded-lg bg-[#05070c] border border-white/5 text-white focus:outline-none focus:border-cyan-500/30 cursor-pointer font-bold"
                     >
                       <option value="PKR 5 Million">PKR 5 - 10 Million (Pre-seed Grant)</option>
                       <option value="PKR 25 Million">PKR 25 - 50 Million (Seed Matching PSF)</option>
@@ -260,10 +384,10 @@ export default function CompanyInvestorsPage() {
 
                   <button 
                     type="submit"
-                    className="w-full bg-cyan-500 text-slate-950 font-bold py-2.5 rounded-xl hover:bg-cyan-400 transition-all text-xs tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full bg-cyan-500 text-slate-950 font-black py-2.5 rounded-xl hover:bg-cyan-400 transition-all tracking-wider flex items-center justify-center gap-1.5 cursor-pointer uppercase"
                   >
                     Evaluate Pitch Alignment
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </button>
                 </form>
               )}
@@ -271,28 +395,28 @@ export default function CompanyInvestorsPage() {
               {pitchStep === 2 && (
                 <div className="text-center py-12 flex flex-col justify-center items-center">
                   <Terminal className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-                  <h4 className="font-extrabold text-sm text-white">Running Mandate Analysis...</h4>
-                  <p className="text-xs text-slate-400 max-w-[240px] mt-1 leading-relaxed">
-                    Verifying FBR IT export compliance maps and cross-referencing past seed targets...
+                  <h4 className="font-black text-sm text-white uppercase tracking-wider">Running Mandate Analysis...</h4>
+                  <p className="text-xs text-slate-400 max-w-[240px] mt-1 leading-relaxed font-semibold">
+                    Verifying sovereign matching parameters and cross-referencing seed targets...
                   </p>
                 </div>
               )}
 
               {pitchStep === 3 && pitchScore && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-4 bg-slate-900/60 p-4 rounded-xl border border-white/5">
+                <div className="space-y-5 text-xs">
+                  <div className="flex items-center gap-4 bg-slate-900/60 p-4 rounded-xl border border-white/5 font-semibold">
                     <div className="w-12 h-12 rounded-full bg-slate-950 border border-white/5 flex items-center justify-center text-cyan-400 font-mono font-black text-sm">
                       {pitchScore.score}%
                     </div>
                     <div>
-                      <h5 className="font-extrabold text-sm text-white tracking-wide">{pitchScore.probability}</h5>
-                      <p className="text-[10px] text-slate-400 font-semibold tracking-wide">Federal Sovereign matching: pre-checked</p>
+                      <h5 className="font-extrabold text-sm text-white tracking-wide uppercase">{pitchScore.probability}</h5>
+                      <p className="text-[10px] text-slate-500 font-bold tracking-wide uppercase">Federal Sovereign matching: pre-checked</p>
                     </div>
                   </div>
 
-                  <div className="text-xs space-y-3">
+                  <div className="space-y-3 font-semibold">
                     <div>
-                      <p className="font-extrabold text-cyan-400 tracking-wide">Platform Directives:</p>
+                      <p className="font-black text-cyan-400 tracking-wide uppercase">Platform Directives:</p>
                       <p className="text-slate-300 leading-relaxed font-semibold mt-0.5">{pitchScore.recommendation}</p>
                     </div>
                   </div>
@@ -300,16 +424,16 @@ export default function CompanyInvestorsPage() {
                   <div className="flex gap-3 mt-6">
                     <button 
                       onClick={() => setPitchStep(1)} 
-                      className="flex-1 bg-slate-900 border border-white/10 hover:border-white/20 text-white font-bold text-xs py-2.5 rounded-xl transition-all"
+                      className="flex-1 bg-slate-900 border border-white/10 hover:border-white/20 text-white font-black py-2.5 rounded-xl transition-all uppercase tracking-wider text-[10px]"
                     >
                       Modify Parameters
                     </button>
                     <button 
                       onClick={() => {
                         setActiveVC(null);
-                        alert(`Venture pitch dispatched! Portfolios advisors will schedule meeting coordinates directly.`);
+                        alert(`Venture pitch dispatched! Portfolio advisors will schedule meeting coordinates directly.`);
                       }} 
-                      className="flex-1 bg-cyan-500 text-slate-950 font-bold text-xs py-2.5 rounded-xl hover:bg-cyan-400 transition-all cursor-pointer"
+                      className="flex-1 bg-cyan-500 text-slate-950 font-black py-2.5 rounded-xl hover:bg-cyan-400 transition-all cursor-pointer uppercase tracking-wider text-[10px]"
                     >
                       Dispatch Deck
                     </button>
