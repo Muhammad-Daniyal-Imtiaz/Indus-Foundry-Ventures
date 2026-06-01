@@ -21,7 +21,8 @@ import {
   Layers,
   HelpCircle,
   Cpu,
-  Loader2
+  Loader2,
+  ShoppingBag
 } from "lucide-react";
 
 export default function Header() {
@@ -194,6 +195,19 @@ export default function Header() {
                     <div>
                       <p className="text-xs font-bold text-white">Challenge Arena</p>
                       <p className="text-[9.5px] text-slate-400 font-medium">Compete for pilot contracts & prizes</p>
+                    </div>
+                  </Link>
+
+                  <Link 
+                    href="/mvps" 
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group"
+                  >
+                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-slate-950 transition-all">
+                      <ShoppingBag className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">MVP Marketplace</p>
+                      <p className="text-[9.5px] text-slate-400 font-medium">Buy/Sell ready-to-scale apps</p>
                     </div>
                   </Link>
                 </motion.div>
@@ -387,6 +401,7 @@ export default function Header() {
                   <Link href="/jobs" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-teal-400" /> Jobs</Link>
                   <Link href="/freelance" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Freelance</Link>
                   <Link href="/challenges" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-rose-400" /> Challenges</Link>
+                  <Link href="/mvps" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5 text-indigo-400" /> MVPs</Link>
                 </div>
               </div>
 
