@@ -50,12 +50,28 @@ export default function IndividualInvestorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPakOnly, setShowPakOnly] = useState(true);
   const [selectedType, setSelectedType] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(30);
   
   // Modal & Pitch states
   const [pitchInvestor, setPitchInvestor] = useState<Investor | null>(null);
   const [pitchSubmitted, setPitchSubmitted] = useState(false);
   const [ideaDesc, setIdeaDesc] = useState("");
   const [equityTarget, setEquityTarget] = useState("");
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setVisibleCount(30);
+  };
+
+  const handleTypeChange = (val: string) => {
+    setSelectedType(val);
+    setVisibleCount(30);
+  };
+
+  const handlePakToggle = () => {
+    setShowPakOnly(prev => !prev);
+    setVisibleCount(30);
+  };
 
   // Filter raw list to only individual angels / angel networks
   const angelInvestors = useMemo(() => {
@@ -136,7 +152,7 @@ export default function IndividualInvestorsPage() {
               type="text"
               placeholder="Search angels by name, thesis, or headquarters location..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-[#0c111d] border border-white/5 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-amber-500/30 transition-all outline-none"
             />
           </div>
@@ -145,7 +161,7 @@ export default function IndividualInvestorsPage() {
           <div>
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={(e) => handleTypeChange(e.target.value)}
               className="w-full bg-[#0c111d] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
             >
               <option value="All">All Angel Types</option>
@@ -164,7 +180,7 @@ export default function IndividualInvestorsPage() {
               <input 
                 type="checkbox" 
                 checked={showPakOnly}
-                onChange={() => setShowPakOnly(!showPakOnly)}
+                onChange={handlePakToggle}
                 className="sr-only peer" 
               />
               <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950 peer-checked:after:border-emerald-500"></div>
@@ -173,14 +189,14 @@ export default function IndividualInvestorsPage() {
         </div>
 
         {/* Selected parameters summary */}
-        <div className="mb-6 flex justify-between items-center text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-          <span>Found {filteredInvestors.length} Match{filteredInvestors.length !== 1 && "es"}</span>
-          {showPakOnly && <span>Showing {pakAngelsCount} Pakistan-Active Angels</span>}
+        <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono border-b border-white/5 pb-4">
+          <span>Found {filteredInvestors.length} matching angel{filteredInvestors.length !== 1 ? "s" : ""} (out of {angelInvestors.length} total angels in database)</span>
+          {showPakOnly && <span className="text-amber-400">Showing {pakAngelsCount} Pakistan-Active Angels</span>}
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          {filteredInvestors.slice(0, 100).map(investor => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {filteredInvestors.slice(0, visibleCount).map(investor => (
             <div 
               key={investor.id}
               className="bg-[#0c111d] border border-white/5 hover:border-amber-500/20 rounded-2xl p-6 transition-all flex flex-col justify-between group relative overflow-hidden"
@@ -275,6 +291,18 @@ export default function IndividualInvestorsPage() {
             </div>
           ))}
         </div>
+
+        {/* Load More Button */}
+        {filteredInvestors.length > visibleCount && (
+          <div className="flex justify-center mt-12 mb-16">
+            <button
+              onClick={() => setVisibleCount(prev => prev + 60)}
+              className="bg-slate-900 border border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5 hover:text-amber-400 text-slate-300 font-black text-xs px-8 py-3.5 rounded-xl transition-all cursor-pointer uppercase tracking-wider shadow-lg shadow-black/40"
+            >
+              Load More Angel Backers ({filteredInvestors.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
 
       </div>
 

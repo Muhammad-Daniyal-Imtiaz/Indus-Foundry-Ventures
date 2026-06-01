@@ -50,6 +50,7 @@ export default function CompanyInvestorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPakOnly, setShowPakOnly] = useState(true);
   const [selectedType, setSelectedType] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(30);
   
   const [activeVC, setActiveVC] = useState<Investor | null>(null);
   
@@ -62,6 +63,21 @@ export default function CompanyInvestorsPage() {
     fundingGoal: "PKR 5 Million"
   });
   const [pitchScore, setPitchScore] = useState<any>(null);
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setVisibleCount(30);
+  };
+
+  const handleTypeChange = (val: string) => {
+    setSelectedType(val);
+    setVisibleCount(30);
+  };
+
+  const handlePakToggle = () => {
+    setShowPakOnly(prev => !prev);
+    setVisibleCount(30);
+  };
 
   // Filter raw list to only company/institutional VCs
   const companyInvestors = useMemo(() => {
@@ -158,7 +174,7 @@ export default function CompanyInvestorsPage() {
               type="text"
               placeholder="Search VCs by name, thesis, or headquarters location..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-[#0c111d] border border-white/5 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-cyan-500/30 transition-all outline-none"
             />
           </div>
@@ -167,7 +183,7 @@ export default function CompanyInvestorsPage() {
           <div>
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={(e) => handleTypeChange(e.target.value)}
               className="w-full bg-[#0c111d] border border-white/5 focus:border-cyan-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
             >
               <option value="All">All VC Types</option>
@@ -187,7 +203,7 @@ export default function CompanyInvestorsPage() {
               <input 
                 type="checkbox" 
                 checked={showPakOnly}
-                onChange={() => setShowPakOnly(!showPakOnly)}
+                onChange={handlePakToggle}
                 className="sr-only peer" 
               />
               <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950 peer-checked:after:border-emerald-500"></div>
@@ -196,14 +212,14 @@ export default function CompanyInvestorsPage() {
         </div>
 
         {/* Selected parameters summary */}
-        <div className="mb-6 flex justify-between items-center text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-          <span>Found {filteredCompanies.length} Match{filteredCompanies.length !== 1 && "es"}</span>
-          {showPakOnly && <span>Showing {pakCompaniesCount} Pakistan-Active VCs</span>}
+        <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono border-b border-white/5 pb-4">
+          <span>Found {filteredCompanies.length} matching VC{filteredCompanies.length !== 1 ? "s" : ""} (out of {companyInvestors.length} total VCs in database)</span>
+          {showPakOnly && <span className="text-emerald-400">Showing {pakCompaniesCount} Pakistan-Active VCs</span>}
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {filteredCompanies.slice(0, 100).map(company => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredCompanies.slice(0, visibleCount).map(company => (
             <div 
               key={company.id}
               className="bg-[#0c111d] border border-white/5 hover:border-cyan-500/20 rounded-2xl p-6 transition-all flex flex-col justify-between group relative overflow-hidden text-xs"
@@ -296,6 +312,18 @@ export default function CompanyInvestorsPage() {
             </div>
           ))}
         </div>
+
+        {/* Load More Button */}
+        {filteredCompanies.length > visibleCount && (
+          <div className="flex justify-center mt-12 mb-16">
+            <button
+              onClick={() => setVisibleCount(prev => prev + 60)}
+              className="bg-slate-900 border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:text-cyan-400 text-slate-300 font-black text-xs px-8 py-3.5 rounded-xl transition-all cursor-pointer uppercase tracking-wider shadow-lg shadow-black/40"
+            >
+              Load More Venture Funds ({filteredCompanies.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
 
       </div>
 
