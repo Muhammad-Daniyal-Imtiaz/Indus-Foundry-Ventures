@@ -48,9 +48,11 @@ function formatCheque(min: number | null, max: number | null) {
 
 export default function IndividualInvestorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showPakOnly, setShowPakOnly] = useState(true);
   const [selectedType, setSelectedType] = useState("All");
   const [visibleCount, setVisibleCount] = useState(30);
+  const [selectedCountry, setSelectedCountry] = useState("Pakistan");
+  const [selectedStage, setSelectedStage] = useState("All");
+  const [chequeFilter, setChequeFilter] = useState("All");
   
   // Modal & Pitch states
   const [pitchInvestor, setPitchInvestor] = useState<Investor | null>(null);
@@ -68,8 +70,27 @@ export default function IndividualInvestorsPage() {
     setVisibleCount(30);
   };
 
-  const handlePakToggle = () => {
-    setShowPakOnly(prev => !prev);
+  const handleCountryChange = (val: string) => {
+    setSelectedCountry(val);
+    setVisibleCount(30);
+  };
+
+  const handleStageChange = (val: string) => {
+    setSelectedStage(val);
+    setVisibleCount(30);
+  };
+
+  const handleChequeFilterChange = (val: string) => {
+    setChequeFilter(val);
+    setVisibleCount(30);
+  };
+
+  const resetAllFilters = () => {
+    setSearchTerm("");
+    setSelectedType("All");
+    setSelectedCountry("Pakistan");
+    setSelectedStage("All");
+    setChequeFilter("All");
     setVisibleCount(30);
   };
 
@@ -84,6 +105,23 @@ export default function IndividualInvestorsPage() {
     return angelInvestors.filter(i => String(i.countries || '').toLowerCase().includes("pakistan")).length;
   }, [angelInvestors]);
 
+  // Dynamically extract unique countries for the select dropdown
+  const uniqueCountries = useMemo(() => {
+    const set = new Set<string>();
+    angelInvestors.forEach(inv => {
+      if (inv.countries) {
+        inv.countries.split(",").forEach(c => {
+          const trimmed = c.trim();
+          if (trimmed) set.add(trimmed);
+        });
+      }
+    });
+    const sorted = Array.from(set).sort();
+    const topCountries = ["Pakistan", "USA", "UK", "Germany", "France", "Canada", "Singapore", "India"];
+    const mainList = sorted.filter(c => !topCountries.includes(c));
+    return ["All", ...topCountries, ...mainList];
+  }, [angelInvestors]);
+
   // Apply filters
   const filteredInvestors = useMemo(() => {
     return angelInvestors.filter(i => {
@@ -91,18 +129,42 @@ export default function IndividualInvestorsPage() {
       const hqStr = String(i.hq || '');
       const thesisStr = String(i.thesis || '');
       const countriesStr = String(i.countries || '');
+      const stageStr = String(i.stage || '');
 
       const matchesSearch = 
         nameStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
         hqStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
         thesisStr.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesPak = !showPakOnly || countriesStr.toLowerCase().includes("pakistan");
+      const matchesCountry = 
+        selectedCountry === "All" || 
+        countriesStr.toLowerCase().includes(selectedCountry.toLowerCase());
+
       const matchesType = selectedType === "All" || i.type === selectedType;
 
-      return matchesSearch && matchesPak && matchesType;
+      const matchesStage = 
+        selectedStage === "All" || 
+        stageStr.toLowerCase().includes(selectedStage.toLowerCase());
+
+      // Cheque sizing filters
+      let matchesCheque = true;
+      if (chequeFilter !== "All") {
+        const minVal = i.minCheque || 0;
+        const maxVal = i.maxCheque || 999999999;
+        if (chequeFilter === "under100k") {
+          matchesCheque = minVal < 100000;
+        } else if (chequeFilter === "100kTo500k") {
+          matchesCheque = (minVal >= 100000 && minVal <= 500000) || (maxVal >= 100000 && maxVal <= 500000);
+        } else if (chequeFilter === "500kTo2M") {
+          matchesCheque = (minVal >= 500000 && minVal <= 2000000) || (maxVal >= 500000 && maxVal <= 2000000);
+        } else if (chequeFilter === "over2M") {
+          matchesCheque = maxVal > 2000000;
+        }
+      }
+
+      return matchesSearch && matchesCountry && matchesType && matchesStage && matchesCheque;
     });
-  }, [angelInvestors, searchTerm, showPakOnly, selectedType]);
+  }, [angelInvestors, searchTerm, selectedCountry, selectedType, selectedStage, chequeFilter]);
 
   const handlePitchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,55 +205,117 @@ export default function IndividualInvestorsPage() {
           </p>
         </div>
 
-        {/* Filter Toolbar */}
-        <div className="mb-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
-          {/* Search Bar */}
-          <div className="lg:col-span-2 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search angels by name, thesis, or headquarters location..."
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-[#0c111d] border border-white/5 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-amber-500/30 transition-all outline-none"
-            />
-          </div>
+        {/* Advanced Filter Toolbar */}
+        <div className="mb-10 p-6 bg-[#0c111d] border border-white/5 rounded-2xl relative overflow-hidden">
+          {/* Top subtle decoration */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
 
-          {/* Type Selector */}
-          <div>
-            <select
-              value={selectedType}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="w-full bg-[#0c111d] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
-            >
-              <option value="All">All Angel Types</option>
-              <option value="Angel network">Angel Networks</option>
-              <option value="Solo angel">Solo Angels</option>
-              <option value="Startup studio">Startup Studios</option>
-              <option value="Incubator, Accelerator">Accelerators / Incubators</option>
-              <option value="Other">Other Networks</option>
-            </select>
-          </div>
+          <div className="flex flex-col gap-6">
+            {/* Row 1: Search & Type */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Search input */}
+              <div className="md:col-span-2 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search angels by fund name, investment thesis, hq..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-[#05070c] border border-white/5 text-white placeholder-slate-500 text-xs font-semibold rounded-xl focus:outline-none focus:border-amber-500/30 transition-all outline-none"
+                />
+              </div>
 
-          {/* Pakistan Toggle */}
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#0c111d] border border-white/5 h-full">
-            <span className="text-xs text-slate-400 font-bold">Invest in Pakistan</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={showPakOnly}
-                onChange={handlePakToggle}
-                className="sr-only peer" 
-              />
-              <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950 peer-checked:after:border-emerald-500"></div>
-            </label>
+              {/* Angel Type selector */}
+              <div>
+                <select
+                  value={selectedType}
+                  onChange={(e) => handleTypeChange(e.target.value)}
+                  className="w-full bg-[#05070c] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                >
+                  <option value="All">All Angel Types</option>
+                  <option value="Angel network">Angel Networks</option>
+                  <option value="Solo angel">Solo Angels</option>
+                  <option value="Startup studio">Startup Studios</option>
+                  <option value="Incubator, Accelerator">Accelerators / Incubators</option>
+                  <option value="Other">Other Networks</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 2: Advanced filters (Investment Country, Stage, Cheque Size) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+              {/* Target Country dropdown */}
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Target Country</label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                  className="w-full bg-[#05070c] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                >
+                  <option value="All">All Target Countries (Global)</option>
+                  {uniqueCountries.filter(c => c !== "All").map((c, idx) => (
+                    <option key={idx} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Target Stage dropdown */}
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Investment Stage</label>
+                <select
+                  value={selectedStage}
+                  onChange={(e) => handleStageChange(e.target.value)}
+                  className="w-full bg-[#05070c] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                >
+                  <option value="All">All Active Stages</option>
+                  <option value="Idea or Patent">1. Idea or Patent</option>
+                  <option value="Prototype">2. Prototype</option>
+                  <option value="Early Revenue">3. Early Revenue</option>
+                  <option value="Scaling">4. Scaling</option>
+                  <option value="Growth">5. Growth</option>
+                </select>
+              </div>
+
+              {/* Target Ticket size dropdown */}
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Ticket Size Cap</label>
+                <select
+                  value={chequeFilter}
+                  onChange={(e) => handleChequeFilterChange(e.target.value)}
+                  className="w-full bg-[#05070c] border border-white/5 focus:border-amber-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                >
+                  <option value="All">All Cheque Sizes</option>
+                  <option value="under100k">Under $100k</option>
+                  <option value="100kTo500k">$100k - $500k</option>
+                  <option value="500kTo2M">$500k - $2M</option>
+                  <option value="over2M">Over $2M+</option>
+                </select>
+              </div>
+
+              {/* Reset button */}
+              <div className="pt-5">
+                <button
+                  onClick={resetAllFilters}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 hover:border-white/20 text-xs py-3 rounded-xl transition-all cursor-pointer font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  Clear Filters
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Selected parameters summary */}
         <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-[10.5px] font-bold text-slate-500 uppercase tracking-widest font-mono border-b border-white/5 pb-4">
           <span>Found {filteredInvestors.length} matching angel{filteredInvestors.length !== 1 ? "s" : ""} (out of {angelInvestors.length} total angels in database)</span>
-          {showPakOnly && <span className="text-amber-400">Showing {pakAngelsCount} Pakistan-Active Angels</span>}
+          {selectedCountry === "Pakistan" ? (
+            <span className="text-amber-400">Showing {pakAngelsCount} Pakistan-Active Angels</span>
+          ) : (
+            <span className="text-amber-400">Target Focus: {selectedCountry}</span>
+          )}
         </div>
 
         {/* Main Grid */}
