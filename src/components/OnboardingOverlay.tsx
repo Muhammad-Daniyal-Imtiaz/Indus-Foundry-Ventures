@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { checkUserStatus, saveUserOnboarding } from "@/app/actions/user";
 import { 
@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 
 export default function OnboardingOverlay() {
-  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+  const { data: session, status } = useSession();
+  const isLoaded = status !== "loading";
+  const isSignedIn = !!session;
   const [checking, setChecking] = useState(false);
   const [needOnboarding, setNeedOnboarding] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -138,7 +140,7 @@ export default function OnboardingOverlay() {
                 </span>
                 <h3 className="font-black text-2xl tracking-tight text-white">Select Your Foundry Role</h3>
                 <p className="text-slate-400 text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
-                  Salam, <span className="text-white font-bold">{clerkUser?.firstName || "User"}</span>! Select a primary role to customize your placement matches, matches can be updated later.
+                  Salam, <span className="text-white font-bold">{session?.user?.name?.split(" ")[0] || "User"}</span>! Select a primary role to customize your placement matches, matches can be updated later.
                 </p>
               </div>
 

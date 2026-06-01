@@ -1,24 +1,27 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function checkUserStatus() {
   try {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
       return { isAuthenticated: false, hasRole: false };
     }
 
+    const email = session.user.email?.toLowerCase().trim() || "";
     // Check if user exists in Turso DB
-    const existingUsers = await db.select().from(users).where(eq(users.id, clerkUser.id)).limit(1);
+    const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
     if (existingUsers.length > 0) {
+      const hasRole = !!existingUsers[0].role && existingUsers[0].role !== "None";
       return { 
         isAuthenticated: true, 
-        hasRole: true, 
+        hasRole, 
         user: existingUsers[0] 
       };
     }
@@ -26,9 +29,9 @@ export async function checkUserStatus() {
     return { 
       isAuthenticated: true, 
       hasRole: false, 
-      clerkEmail: clerkUser.emailAddresses[0]?.emailAddress || "",
-      clerkName: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User",
-      clerkAvatar: clerkUser.imageUrl || ""
+      clerkEmail: email,
+      clerkName: session.user.name || "User",
+      clerkAvatar: session.user.image || ""
     };
   } catch (error) {
     console.error("Error checking user status:", error);
@@ -38,23 +41,25 @@ export async function checkUserStatus() {
 
 export async function saveUserOnboarding(role: string) {
   try {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
       throw new Error("Unauthorized");
     }
 
+    const email = session.user.email?.toLowerCase().trim() || "";
+    const name = session.user.name || "User";
+    const avatarUrl = session.user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+
     // Double check if already onboarded
-    const existingUsers = await db.select().from(users).where(eq(users.id, clerkUser.id)).limit(1);
+    const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existingUsers.length > 0) {
-      return existingUsers[0];
+      await db.update(users).set({ role }).where(eq(users.email, email));
+      return { ...existingUsers[0], role };
     }
 
-    const email = clerkUser.emailAddresses[0]?.emailAddress || "";
-    const name = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User";
-    const avatarUrl = clerkUser.imageUrl || "";
-
+    const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
     const newUser = {
-      id: clerkUser.id,
+      id: newUserId,
       email,
       name,
       role,
@@ -71,12 +76,13 @@ export async function saveUserOnboarding(role: string) {
 
 export async function updateUserRole(role: string) {
   try {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
       throw new Error("Unauthorized");
     }
 
-    await db.update(users).set({ role }).where(eq(users.id, clerkUser.id));
+    const email = session.user.email?.toLowerCase().trim() || "";
+    await db.update(users).set({ role }).where(eq(users.email, email));
     return { success: true, role };
   } catch (error) {
     console.error("Error updating user role:", error);

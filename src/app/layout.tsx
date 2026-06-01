@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./Header";
-import { ClerkProvider } from "@clerk/nextjs";
+import { NextAuthProvider } from "@/components/NextAuthProvider";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
 
 const geistSans = Geist({
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <NextAuthProvider>
       <html lang="en" className="scroll-smooth">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
@@ -38,6 +38,6 @@ export default function RootLayout({
           </main>
         </body>
       </html>
-    </ClerkProvider>
+    </NextAuthProvider>
   );
 }

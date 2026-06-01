@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { checkUserStatus, updateUserRole } from "@/app/actions/user";
 import {
   Users,
@@ -26,7 +26,9 @@ import {
 } from "lucide-react";
 
 export default function Header() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { data: session, status } = useSession();
+  const isLoaded = status !== "loading";
+  const isSignedIn = !!session;
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -302,14 +304,15 @@ export default function Header() {
         <div className="flex items-center gap-4 relative">
           
           {isLoaded && !isSignedIn && (
-            <SignInButton mode="modal">
-              <button className="bg-slate-900 border border-white/10 hover:border-emerald-500/30 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all cursor-pointer">
-                Sign In
-              </button>
-            </SignInButton>
+            <Link 
+              href="/login"
+              className="bg-slate-900 border border-white/10 hover:border-emerald-500/30 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all cursor-pointer"
+            >
+              Sign In
+            </Link>
           )}
 
-          {isLoaded && isSignedIn && (
+          {isLoaded && isSignedIn && session && (
             <>
               <div className="relative">
                 <button 
@@ -355,7 +358,20 @@ export default function Header() {
                 </AnimatePresence>
               </div>
               
-              <UserButton />
+              {/* Custom User Info and Sign Out */}
+              <div className="flex items-center gap-3 relative shrink-0">
+                <img
+                  src={session.user?.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(session.user?.name || "User")}`}
+                  alt={session.user?.name || "User"}
+                  className="w-8 h-8 rounded-full border border-white/10 bg-slate-950 object-cover"
+                />
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="bg-slate-900 border border-white/10 hover:border-red-500/30 hover:text-red-400 text-slate-400 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-wider font-mono"
+                >
+                  Logout
+                </button>
+              </div>
             </>
           )}
 
