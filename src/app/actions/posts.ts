@@ -16,8 +16,22 @@ export async function getPosts() {
   }
 }
 
-export async function createPost(title: string, content: string, category: string, images: string[]) {
+export async function createPost(formData: FormData) {
   try {
+    const title = formData.get("title") as string;
+    const content = formData.get("content") as string;
+    const category = formData.get("category") as string;
+    const imagesRaw = formData.get("images") as string;
+    
+    let images: string[] = [];
+    if (imagesRaw) {
+      try {
+        images = JSON.parse(imagesRaw);
+      } catch (e) {
+        images = [];
+      }
+    }
+
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
       throw new Error("Unauthorized");

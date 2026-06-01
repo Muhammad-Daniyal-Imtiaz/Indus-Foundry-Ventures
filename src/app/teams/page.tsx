@@ -95,7 +95,13 @@ export default function TeamsPage() {
     setPostError("");
 
     try {
-      const res = await createPost(postTitle, postContent, postCategory, postImages);
+      const formData = new FormData();
+      formData.append("title", postTitle);
+      formData.append("content", postContent);
+      formData.append("category", postCategory);
+      formData.append("images", JSON.stringify(postImages));
+
+      const res = await createPost(formData);
       if (res.success && res.post) {
         setShowPostSuccess(true);
         // Prepend new post
