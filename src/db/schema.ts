@@ -90,6 +90,28 @@ export const mvps = sqliteTable(
   (t) => ({})
 );
 
+export const freelanceProjects = sqliteTable(
+  "freelance_projects",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    userName: text("user_name").notNull(),
+    userRole: text("user_role").notNull(),
+    userAvatar: text("user_avatar").notNull(),
+    title: text("title").notNull(),
+    client: text("client").notNull(),
+    budget: text("budget").notNull(),
+    budgetType: text("budget_type").notNull(), // 'Fixed' or 'Hourly'
+    duration: text("duration").notNull(),
+    primaryIndustry: text("primary_industry").notNull(),
+    secondaryIndustries: text("secondary_industries").notNull(), // JSON array
+    skills: text("skills").notNull(), // Comma-separated
+    description: text("description").notNull(),
+    ...timestamps,
+  },
+  (t) => ({})
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 

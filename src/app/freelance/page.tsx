@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase,
@@ -16,16 +16,19 @@ import {
   AlertCircle
 } from "lucide-react";
 
-import { freelanceProjectsData, freelanceProjectsData as initialData, startupCategories, FreelanceProject } from "../data";
+import { freelanceProjectsData, startupCategories, FreelanceProject } from "../data";
+import { getFreelanceProjects, createFreelanceProject } from "../actions/freelance";
 
 export default function FreelancePage() {
-  const [projects, setProjects] = useState<FreelanceProject[]>(initialData);
+  const [projects, setProjects] = useState<FreelanceProject[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
+  const [loading, setLoading] = useState(true);
 
   // Post Freelance Project Modal
   const [showPostModal, setShowPostModal] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form Fields
   const [formTitle, setFormTitle] = useState("");
@@ -38,39 +41,72 @@ export default function FreelancePage() {
   const [formSkills, setFormSkills] = useState("");
   const [formDesc, setFormDesc] = useState("");
 
-  const handlePostProject = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newProject: FreelanceProject = {
-      id: `f_user_${Date.now()}`,
-      title: formTitle,
-      client: formClient,
-      budget: formBudget,
-      budgetType: formBudgetType,
-      duration: formDuration,
-      primaryIndustry: formPrimaryIndustry,
-      secondaryIndustries: formSecondaryIndustries,
-      skills: formSkills.split(',').map(s => s.trim()).filter(Boolean),
-      description: formDesc,
-      postedDate: 'Just now'
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const result = await getFreelanceProjects();
+        if (result.success && result.projects && result.projects.length > 0) {
+          setProjects(result.projects.map(p => ({
+            ...p,
+            postedDate: "Just now"
+          })) as any);
+        } else {
+          setProjects(freelanceProjectsData);
+        }
+      } catch (e) {
+        console.error("Failed to fetch freelance projects:", e);
+        setProjects(freelanceProjectsData);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchProjects();
+  }, []);
 
-    setProjects(prev => [newProject, ...prev]);
-    setSuccessToast(true);
+  const handlePostProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
 
-    // Reset Form
-    setFormTitle("");
-    setFormClient("");
-    setFormBudget("");
-    setFormDuration("");
-    setFormSkills("");
-    setFormDesc("");
-    setFormSecondaryIndustries([]);
+    try {
+      const formData = new FormData();
+      formData.append("title", formTitle);
+      formData.append("client", formClient);
+      formData.append("budget", formBudget);
+      formData.append("budgetType", formBudgetType);
+      formData.append("duration", formDuration);
+      formData.append("primaryIndustry", formPrimaryIndustry);
+      formData.append("secondaryIndustries", JSON.stringify(formSecondaryIndustries));
+      formData.append("skills", formSkills);
+      formData.append("description", formDesc);
 
-    setTimeout(() => {
-      setShowPostModal(false);
-      setSuccessToast(false);
-    }, 2000);
+      const result = await createFreelanceProject(formData);
+      if (result.success && result.project) {
+        setProjects(prev => [{
+          ...result.project,
+          postedDate: "Just now"
+        } as any, ...prev]);
+      }
+      setSuccessToast(true);
+
+      // Reset Form
+      setFormTitle("");
+      setFormClient("");
+      setFormBudget("");
+      setFormDuration("");
+      setFormSkills("");
+      setFormDesc("");
+      setFormSecondaryIndustries([]);
+
+      setTimeout(() => {
+        setShowPostModal(false);
+        setSuccessToast(false);
+      }, 2000);
+    } catch (e) {
+      console.error("Failed to create freelance project:", e);
+      alert("Failed to post your freelance project. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleSecondaryIndustry = (tag: string) => {
@@ -93,6 +129,14 @@ export default function FreelancePage() {
 
     return matchesSearch && matchesTag;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">Loading Freelance Projects...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern overflow-hidden">
@@ -136,7 +180,7 @@ export default function FreelancePage() {
               placeholder="Search contracts (e.g. LLVM, compiler, ROS2)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-teal-500/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-teal-500/50"
             />
           </div>
 
@@ -306,7 +350,7 @@ export default function FreelancePage() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. $2,500 or PKR 200,000"
+                        placeholder="e.g. $3,500 or PKR 250,000"
                         value={formBudget}
                         onChange={(e) => setFormBudget(e.target.value)}
                         className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none"
@@ -393,10 +437,11 @@ export default function FreelancePage() {
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all text-xs tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
+                    disabled={submitting}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all text-xs tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Sparkles className="w-4 h-4 fill-current" />
-                    Load Contract to Platform Board
+                    {submitting ? "Posting Project..." : "Load Contract to Platform Board"}
                   </button>
                 </form>
               )}
