@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User } from "lucide-react";
 
 export default function FeedPostCard({ post }: { post: any }) {
   const [currentImage, setCurrentImage] = useState(0);
@@ -53,6 +53,24 @@ export default function FeedPostCard({ post }: { post: any }) {
            {post.content}
          </p>
       </div>
+
+      {/* Contact Info Block */}
+      {(post.showContactEmail || post.showContactPhone || post.showContactCountry) && (
+        <div className="mx-4 mt-1 mb-2 p-3 bg-slate-900/30 border border-slate-700/40 rounded-lg text-sm text-[#8c959f]">
+           <div className="font-bold text-[#e9eaec] text-[10px] uppercase tracking-wider mb-2 flex items-center gap-1.5"><User className="w-3 h-3 text-emerald-400"/> Creator Contact Information</div>
+           <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+              {post.showContactEmail && post.contactEmail && (
+                <div className="flex items-center gap-1.5 text-slate-300"><Mail className="w-3.5 h-3.5 text-slate-500" /> {post.contactEmail}</div>
+              )}
+              {post.showContactPhone && post.contactPhone && (
+                <div className="flex items-center gap-1.5 text-slate-300"><Phone className="w-3.5 h-3.5 text-slate-500" /> {post.contactPhone}</div>
+              )}
+              {post.showContactCountry && post.contactCountry && (
+                <div className="flex items-center gap-1.5 text-slate-300"><Globe2 className="w-3.5 h-3.5 text-slate-500" /> {post.contactCountry}</div>
+              )}
+           </div>
+        </div>
+      )}
 
       {/* Images Carousel - LinkedIn Style */}
       {imgs.length > 0 && (

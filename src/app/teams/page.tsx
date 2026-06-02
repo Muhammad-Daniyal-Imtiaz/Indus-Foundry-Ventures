@@ -46,6 +46,9 @@ export default function TeamsPage() {
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [postError, setPostError] = useState("");
   const [showPostSuccess, setShowPostSuccess] = useState(false);
+  const [showContactEmail, setShowContactEmail] = useState(false);
+  const [showContactPhone, setShowContactPhone] = useState(false);
+  const [showContactCountry, setShowContactCountry] = useState(false);
 
   // Fetch posts on mount / when feed tab opens
   useEffect(() => {
@@ -103,6 +106,9 @@ export default function TeamsPage() {
       formData.append("content", postContent);
       formData.append("category", postCategory);
       formData.append("images", JSON.stringify(postImages));
+      formData.append("showContactEmail", showContactEmail.toString());
+      formData.append("showContactPhone", showContactPhone.toString());
+      formData.append("showContactCountry", showContactCountry.toString());
 
       const res = await createPost(formData);
       if (res.success && res.post) {
@@ -705,6 +711,38 @@ export default function TeamsPage() {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Contact Info Toggles */}
+                  <div className="bg-slate-900/50 border border-white/5 p-4 rounded-xl space-y-3">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Include Contact Information</label>
+                    <p className="text-[10px] text-slate-400 font-medium">Toggle these to display your profile details publicly on this post.</p>
+                    
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" checked={showContactEmail} onChange={(e) => setShowContactEmail(e.target.checked)} className="hidden" />
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactEmail ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
+                          {showContactEmail && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-bold ${showContactEmail ? 'text-white' : 'text-slate-400'}`}>Show Email</span>
+                      </label>
+                      
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" checked={showContactPhone} onChange={(e) => setShowContactPhone(e.target.checked)} className="hidden" />
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactPhone ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
+                          {showContactPhone && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-bold ${showContactPhone ? 'text-white' : 'text-slate-400'}`}>Show Phone</span>
+                      </label>
+                      
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" checked={showContactCountry} onChange={(e) => setShowContactCountry(e.target.checked)} className="hidden" />
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactCountry ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
+                          {showContactCountry && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-bold ${showContactCountry ? 'text-white' : 'text-slate-400'}`}>Show Country</span>
+                      </label>
                     </div>
                   </div>
 
