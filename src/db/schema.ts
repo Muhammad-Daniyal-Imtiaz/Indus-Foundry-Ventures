@@ -123,3 +123,6 @@ export type NewPost = typeof posts.$inferInsert;
 
 export type Mvp = typeof mvps.$inferSelect;
 export type NewMvp = typeof mvps.$inferInsert;
+
+export type FreelanceProject = typeof freelanceProjects.$inferSelect;
+export type NewFreelanceProject = typeof freelanceProjects.$inferInsert;

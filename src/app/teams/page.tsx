@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSession } from "next-auth/react";
-import { getPosts, createPost } from "@/app/actions/posts";
 import {
   Users,
   Search,
@@ -19,118 +17,11 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon,
-  Upload,
-  MessageSquare,
-  Bookmark,
-  Calendar,
-  Loader2,
-  Trash2
 } from "lucide-react";
 
-import FeedPostCard from "@/components/FeedPostCard";
 import { buildersData, Builder, startupCategories, allFlatCategories } from "../data";
 
 export default function TeamsPage() {
-  const { data: session, status: authStatus } = useSession();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState<"matching" | "feed">("matching");
-
-  // Posts / Feed states
-  const [postsList, setPostsList] = useState<any[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
-  const [postTitle, setPostTitle] = useState("");
-  const [postContent, setPostContent] = useState("");
-  const [postCategory, setPostCategory] = useState("Idea");
-  const [postImages, setPostImages] = useState<string[]>([]); // Base64 strings
-  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
-  const [postError, setPostError] = useState("");
-  const [showPostSuccess, setShowPostSuccess] = useState(false);
-  const [showContactEmail, setShowContactEmail] = useState(false);
-  const [showContactPhone, setShowContactPhone] = useState(false);
-  const [showContactCountry, setShowContactCountry] = useState(false);
-
-  // Fetch posts on mount / when feed tab opens
-  useEffect(() => {
-    async function loadFeed() {
-      setLoadingPosts(true);
-      try {
-        const res = await getPosts();
-        if (res.success && res.posts) {
-          setPostsList(res.posts);
-        }
-      } catch (err) {
-        console.error("Failed to load feed:", err);
-      } finally {
-        setLoadingPosts(false);
-      }
-    }
-    loadFeed();
-  }, [activeTab]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files).slice(0, 3); // Max 3
-    const promises = files.map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          resolve(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(promises).then(base64s => {
-      setPostImages(prev => [...prev, ...base64s].slice(0, 3));
-    });
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setPostImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmitPost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!postTitle.trim() || !postContent.trim()) {
-      setPostError("Please write a title and content for your post.");
-      return;
-    }
-
-    setIsSubmittingPost(true);
-    setPostError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("title", postTitle);
-      formData.append("content", postContent);
-      formData.append("category", postCategory);
-      formData.append("images", JSON.stringify(postImages));
-      formData.append("showContactEmail", showContactEmail.toString());
-      formData.append("showContactPhone", showContactPhone.toString());
-      formData.append("showContactCountry", showContactCountry.toString());
-
-      const res = await createPost(formData);
-      if (res.success && res.post) {
-        setShowPostSuccess(true);
-        // Prepend new post
-        setPostsList(prev => [res.post, ...prev]);
-        // Reset form
-        setPostTitle("");
-        setPostContent("");
-        setPostCategory("Idea");
-        setPostImages([]);
-        setTimeout(() => setShowPostSuccess(false), 2000);
-      } else {
-        setPostError(res.error || "Failed to create post.");
-      }
-    } catch (err: any) {
-      setPostError(err.message || "Something went wrong.");
-    } finally {
-      setIsSubmittingPost(false);
-    }
-  };
-
   const [searchTerm, setSearchTerm] = useState("");
   
   // Multi-tag filters (multiple startup categories)
@@ -263,43 +154,16 @@ export default function TeamsPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white uppercase">
-                {activeTab === "matching" ? "Cofounder Matching" : "Foundry Hub Feed"}
+                Cofounder Matching
               </h1>
               <p className="text-slate-400 text-xs sm:text-sm mt-2 max-w-xl font-semibold leading-relaxed">
-                {activeTab === "matching" 
-                  ? "Filter profiles by selecting multiple startup categories. Align with deep-tech builders, hardware developers, and growth hackers."
-                  : "Post ideas, MVPs, co-founder updates, or space requests. Share local updates and connect with Pakistan's technology ecosystem."}
+                Filter profiles by selecting multiple startup categories. Align with deep-tech builders, hardware developers, and growth hackers.
               </p>
-            </div>
-
-            {/* Premium Tab Selector Buttons */}
-            <div className="flex items-center gap-2 bg-slate-950 p-1.5 border border-white/5 rounded-xl shrink-0">
-              <button
-                onClick={() => setActiveTab("matching")}
-                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  activeTab === "matching"
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 shadow-md shadow-emerald-500/10"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Cofounder Matching
-              </button>
-              <button
-                onClick={() => setActiveTab("feed")}
-                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  activeTab === "feed"
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 shadow-md shadow-emerald-500/10"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Foundry Hub Feed
-              </button>
             </div>
           </div>
         </div>
 
-        {activeTab === "matching" ? (
-          <>
+        <>
             {/* Filters and search with multiple tags select */}
             <div className="space-y-4 mb-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -606,200 +470,7 @@ export default function TeamsPage() {
                 </div>
               </div>
             </div>
-          </>
-        ) : (
-          <div className="space-y-8">
-            {/* Post Submission Card */}
-            {session ? (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-2xl mx-auto bg-[#0c111d] border border-white/10 rounded-2xl p-6 relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <h3 className="font-extrabold text-sm text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-emerald-400" />
-                  Post a Foundry Update
-                </h3>
-
-                {postError && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-xs text-red-400 font-bold">
-                    {postError}
-                  </div>
-                )}
-
-                {showPostSuccess && (
-                  <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl text-xs text-emerald-400 font-bold">
-                    Post successfully submitted!
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmitPost} className="space-y-4 text-xs font-semibold">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">Title</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g., Seeking Rust Dev for custom blockchain verification"
-                        value={postTitle}
-                        onChange={(e) => setPostTitle(e.target.value)}
-                        className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white rounded-xl p-3 outline-none transition-all placeholder:text-slate-600 font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">Post Category</label>
-                      <select
-                        value={postCategory}
-                        onChange={(e) => setPostCategory(e.target.value)}
-                        className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white rounded-xl p-3 outline-none transition-all cursor-pointer font-bold"
-                      >
-                        <option value="Idea">Idea</option>
-                        <option value="MVP">MVP</option>
-                        <option value="Investment Wanted">Investment Wanted</option>
-                        <option value="Partners Wanted">Partners Wanted</option>
-                        <option value="Startup Space Wanted">Startup Space Wanted</option>
-                        <option value="Cofounder Wanted">Cofounder Wanted</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">Description / Update Details</label>
-                    <textarea
-                      required
-                      rows={4}
-                      placeholder="Outline your update, active targets, technical requirements, or offer terms here..."
-                      value={postContent}
-                      onChange={(e) => setPostContent(e.target.value)}
-                      className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white rounded-xl p-3 outline-none transition-all resize-none placeholder:text-slate-600 font-semibold leading-relaxed"
-                    ></textarea>
-                  </div>
-
-                  {/* Image Uploader */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Upload Images (Max 3)</label>
-                    
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-4 rounded-xl border border-dashed border-white/10 hover:border-emerald-500/30 bg-[#05070c] hover:bg-[#0c111d] text-slate-500 hover:text-white transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 w-24 h-24"
-                      >
-                        <Upload className="w-5 h-5" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider font-mono">Upload</span>
-                      </button>
-
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        multiple
-                        accept="image/*"
-                        className="hidden"
-                      />
-
-                      {postImages.map((base64, index) => (
-                        <div key={index} className="relative w-24 h-24 rounded-xl border border-white/10 overflow-hidden group">
-                          <img src={base64} alt={`Upload preview ${index + 1}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow cursor-pointer hover:bg-red-600"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Contact Info Toggles */}
-                  <div className="bg-slate-900/50 border border-white/5 p-4 rounded-xl space-y-3">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Include Contact Information</label>
-                    <p className="text-[10px] text-slate-400 font-medium">Toggle these to display your profile details publicly on this post.</p>
-                    
-                    <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" checked={showContactEmail} onChange={(e) => setShowContactEmail(e.target.checked)} className="hidden" />
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactEmail ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
-                          {showContactEmail && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
-                        </div>
-                        <span className={`text-xs font-bold ${showContactEmail ? 'text-white' : 'text-slate-400'}`}>Show Email</span>
-                      </label>
-                      
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" checked={showContactPhone} onChange={(e) => setShowContactPhone(e.target.checked)} className="hidden" />
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactPhone ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
-                          {showContactPhone && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
-                        </div>
-                        <span className={`text-xs font-bold ${showContactPhone ? 'text-white' : 'text-slate-400'}`}>Show Phone</span>
-                      </label>
-                      
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" checked={showContactCountry} onChange={(e) => setShowContactCountry(e.target.checked)} className="hidden" />
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showContactCountry ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-400'}`}>
-                          {showContactCountry && <Check className="w-3 h-3 text-slate-950 stroke-[3]" />}
-                        </div>
-                        <span className={`text-xs font-bold ${showContactCountry ? 'text-white' : 'text-slate-400'}`}>Show Country</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmittingPost}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black uppercase text-xs py-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10"
-                  >
-                    {isSubmittingPost ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Submit Post</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </motion.div>
-            ) : (
-              <div className="max-w-2xl mx-auto p-8 bg-[#0c111d] border border-white/5 rounded-2xl text-center">
-                <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                <h4 className="font-extrabold text-sm text-white uppercase tracking-wider">Sign in to join the conversation</h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
-                  Only onboarded developers, founders, and students on the PITB Sandbox can publish posts on the live feed.
-                </p>
-                <a
-                  href="/login?callbackUrl=/teams"
-                  className="inline-flex items-center gap-2 mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer uppercase tracking-wider font-mono"
-                >
-                  Access Sandbox login
-                </a>
-              </div>
-            )}
-
-            {/* Posts Feed Timeline */}
-            <div className="max-w-2xl mx-auto space-y-6 pt-4">
-              <h3 className="font-extrabold text-xs text-slate-400 uppercase tracking-widest font-mono">Latest Updates</h3>
-
-              {loadingPosts ? (
-                <div className="text-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mx-auto" />
-                </div>
-              ) : postsList.length === 0 ? (
-                <div className="text-center py-16 border border-dashed border-white/5 rounded-2xl bg-slate-950/20">
-                  <AlertCircle className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">No updates posted yet</p>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Be the first to list an idea or MVP on the feed!</p>
-                </div>
-              ) : (
-                postsList.map((post) => (
-                  <FeedPostCard key={post.id} post={post} />
-                ))
-              )}
-            </div>
-          </div>
-        )}
+        </>
 
       </div>
 

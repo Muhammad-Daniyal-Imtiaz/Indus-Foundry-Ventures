@@ -71,9 +71,11 @@ export async function createPost(formData: FormData) {
 
     // Get roles from profile
     let userRoleDisplay = dbUser.role || "Member";
+    let profile = null;
     try {
       const profileRows = await db.select().from(profiles).where(eq(profiles.userId, dbUser.id)).limit(1);
       if (profileRows.length > 0 && profileRows[0].rolesJson) {
+        profile = profileRows[0];
         const roles: string[] = JSON.parse(profileRows[0].rolesJson);
         if (roles.length > 0) {
           userRoleDisplay = roles.join(", ");
@@ -101,7 +103,17 @@ export async function createPost(formData: FormData) {
     };
 
     await db.insert(posts).values(newPost);
-    return { success: true, post: newPost };
+    return {
+      success: true,
+      post: {
+        ...newPost,
+        contactEmail: showContactEmail ? dbUser.email : null,
+        contactPhone: showContactPhone ? profile?.phone : null,
+        contactCountry: showContactCountry ? profile?.country : null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
   } catch (error: any) {
     console.error("Error creating post:", error);
     return { success: false, error: error.message || "Failed to submit post." };
