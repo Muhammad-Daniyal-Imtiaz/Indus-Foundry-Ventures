@@ -10,7 +10,7 @@ import {
   ChevronDown, Tag, Sparkles, Globe
 } from "lucide-react";
 import { getAllJobs } from "@/app/actions/jobs";
-import { getMyCompanyPage } from "@/app/actions/company";
+import { getMyCompanyPages } from "@/app/actions/company";
 import EasyApplyModal from "@/components/EasyApplyModal";
 import PostJobModal from "@/components/PostJobModal";
 
@@ -36,7 +36,7 @@ const LOC_ICONS: Record<string, React.ReactNode> = {
 export default function JobsPage() {
   const { data: session } = useSession();
   const [jobs, setJobs] = useState<any[]>([]);
-  const [myCompany, setMyCompany] = useState<any>(null);
+  const [myCompanies, setMyCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [industry, setIndustry] = useState("All");
@@ -53,13 +53,13 @@ export default function JobsPage() {
       setLoading(true);
       const [jobsRes, companyRes] = await Promise.all([
         getAllJobs(),
-        session ? getMyCompanyPage() : Promise.resolve({ success: true, page: null }),
+        session ? getMyCompanyPages() : Promise.resolve({ success: true, pages: [] }),
       ]);
       if (jobsRes.success) {
         setJobs(jobsRes.jobs);
         if (jobsRes.jobs.length > 0) setSelectedJob(jobsRes.jobs[0]);
       }
-      if (companyRes.success) setMyCompany(companyRes.page);
+      if (companyRes.success) setMyCompanies(companyRes.pages || []);
       setLoading(false);
     }
     load();
@@ -362,7 +362,7 @@ export default function JobsPage() {
             setJobs((prev) => [job, ...prev]);
             setSelectedJob(job);
           }}
-          companyName={myCompany?.name}
+          companies={myCompanies}
         />
       )}
     </div>

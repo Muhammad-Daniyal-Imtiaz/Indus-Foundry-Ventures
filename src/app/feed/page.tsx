@@ -157,7 +157,7 @@ export default function FeedPage() {
           <div className="lg:col-span-3 sticky top-[76px] space-y-3 hidden lg:block text-left">
 
             {/* Profile Card */}
-            <div className="bg-[#1d2226] border border-[#38434f] rounded-xl overflow-hidden shadow-lg">
+            <div className="bg-[#1d2226] border border-[#38434f] rounded-xl overflow-visible shadow-lg">
               {/* Banner */}
               <div className="h-16 bg-gradient-to-br from-emerald-900/40 via-slate-800 to-indigo-900/30 relative">
                 <div className="absolute inset-0 opacity-20"
@@ -167,9 +167,9 @@ export default function FeedPage() {
               {/* Avatar — overlaps banner */}
               <div className="px-4 pb-4">
                 <div className="-mt-7 mb-3">
-                  {session?.user?.image || userInfo?.avatarUrl ? (
+                  {userInfo?.avatarUrl || session?.user?.image ? (
                     <img
-                      src={session?.user?.image || userInfo?.avatarUrl || ""}
+                      src={userInfo?.avatarUrl || session?.user?.image || ""}
                       alt={session?.user?.name || "User"}
                       className="w-14 h-14 rounded-full border-4 border-[#1d2226] object-cover bg-slate-800"
                     />

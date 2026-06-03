@@ -16,25 +16,26 @@ export async function createJobPosting(formData: FormData) {
     if (!dbUsers.length) return { success: false, error: "User not found." };
     const dbUser = dbUsers[0];
 
-    // Check if user has a company page
+    const selectedCompanyPageId = (formData.get("companyPageId") as string)?.trim();
+    if (!selectedCompanyPageId) {
+      return { success: false, error: "Please select which company is posting this job." };
+    }
+
     const companyRows = await db
       .select()
       .from(companyPages)
-      .where(eq(companyPages.ownerId, dbUser.id))
+      .where(and(eq(companyPages.id, selectedCompanyPageId), eq(companyPages.ownerId, dbUser.id)))
       .limit(1);
 
-    let companyPageId = null;
-    let companyName = (formData.get("companyName") as string)?.trim();
-    let companyLogo = (formData.get("companyLogo") as string) || null;
-    let companySlug = null;
-
-    if (companyRows.length) {
-      const company = companyRows[0];
-      companyPageId = company.id;
-      companyName = company.name;
-      companyLogo = company.logoUrl;
-      companySlug = company.slug;
+    if (!companyRows.length) {
+      return { success: false, error: "Selected company was not found or is not owned by you." };
     }
+
+    const company = companyRows[0];
+    const companyPageId = company.id;
+    const companyName = company.name;
+    const companyLogo = company.logoUrl;
+    const companySlug = company.slug;
 
     const title = (formData.get("title") as string).trim();
     const department = (formData.get("department") as string) || null;

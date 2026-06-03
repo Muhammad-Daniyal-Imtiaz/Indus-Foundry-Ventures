@@ -15,10 +15,10 @@ const PERIODS = ["Monthly", "Annual"];
 interface PostJobModalProps {
   onClose: () => void;
   onCreated: (job: any) => void;
-  companyName?: string;
+  companies: any[];
 }
 
-export default function PostJobModal({ onClose, onCreated, companyName }: PostJobModalProps) {
+export default function PostJobModal({ onClose, onCreated, companies }: PostJobModalProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,10 +30,11 @@ export default function PostJobModal({ onClose, onCreated, companyName }: PostJo
   const [benefits, setBenefits] = useState<string[]>([]);
 
   const [form, setForm] = useState({
+    companyPageId: companies[0]?.id || "",
     title: "", department: "", employmentType: "Full-time", locationType: "On-site",
     location: "", salaryMin: "", salaryMax: "", salaryCurrency: "PKR", salaryPeriod: "Monthly",
     experienceLevel: "Mid", industry: "", description: "",
-    applicationDeadline: "", companyName: companyName || "",
+    applicationDeadline: "",
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -45,7 +46,7 @@ export default function PostJobModal({ onClose, onCreated, companyName }: PostJo
     setInput("");
   };
 
-  const canStep1 = form.title && form.employmentType && form.locationType && form.location && form.experienceLevel && form.industry;
+  const canStep1 = form.companyPageId && form.title && form.employmentType && form.locationType && form.location && form.experienceLevel && form.industry;
 
   const handleSubmit = async () => {
     setError("");
@@ -101,10 +102,21 @@ export default function PostJobModal({ onClose, onCreated, companyName }: PostJo
 
           {step === 1 && (
             <>
-              {!companyName && (
+              {companies.length === 0 ? (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs font-semibold text-amber-200">
+                  Create a company page first. Jobs must be posted by one of your company pages.
+                </div>
+              ) : (
                 <div>
-                  <Label>Company Name *</Label>
-                  <input value={form.companyName} onChange={set("companyName")} className={InputCls} placeholder="Your company or your name" />
+                  <Label>Posting Company *</Label>
+                  <select value={form.companyPageId} onChange={set("companyPageId")} className={SelectCls}>
+                    <option value="">Select your company</option>
+                    {companies.map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name} — {company.industry}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
               <div>
@@ -275,7 +287,7 @@ export default function PostJobModal({ onClose, onCreated, companyName }: PostJo
           ) : (
             <>
               <button onClick={() => setStep(1)} className="flex-1 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-slate-300 text-xs font-bold hover:bg-slate-700 transition-all">← Back</button>
-              <button onClick={handleSubmit} disabled={loading || !form.description}
+              <button onClick={handleSubmit} disabled={loading || !form.description || companies.length === 0}
                 className="flex-1 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-2">
                 {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Posting...</> : <><CheckCircle2 className="w-4 h-4" /> Post Job</>}
               </button>

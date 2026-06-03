@@ -60,11 +60,19 @@ export async function saveProfile(formData: FormData) {
     const bestProjectUrl = (formData.get("bestProjectUrl") as string) || "";
     const rolesJson = (formData.get("rolesJson") as string) || "[]";
     const employmentStatus = (formData.get("employmentStatus") as string) || "";
+    const avatarUrl = (formData.get("avatarUrl") as string) || "";
 
     // Also update the legacy role field in users table with the first selected role
     const roles: string[] = JSON.parse(rolesJson);
     const primaryRole = roles.length > 0 ? roles[0] : "None";
-    await db.update(users).set({ role: primaryRole }).where(eq(users.id, user.id));
+    await db
+      .update(users)
+      .set({
+        role: primaryRole,
+        avatarUrl: avatarUrl.trim() || user.avatarUrl,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, user.id));
 
     // Upsert the profile
     const existingProfile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { getProfile, saveProfile } from "@/app/actions/profile";
@@ -51,6 +51,7 @@ const COUNTRIES = [
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -74,6 +75,16 @@ export default function ProfilePage() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => setUserAvatar(String(reader.result));
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
 
   useEffect(() => {
     async function load() {
@@ -139,6 +150,7 @@ export default function ProfilePage() {
     fd.set("bestProjectUrl", bestProjectUrl);
     fd.set("rolesJson", JSON.stringify(selectedRoles));
     fd.set("employmentStatus", employmentStatus);
+    fd.set("avatarUrl", userAvatar);
 
     try {
       const res = await saveProfile(fd);
@@ -194,11 +206,39 @@ export default function ProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-[#1d2226] border border-[#38434f] rounded-2xl p-8 shadow-xl flex flex-col items-center text-center"
           >
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-32 h-32 rounded-full border-4 border-emerald-500/20 object-cover shadow-lg mb-4"
-            />
+            <div className="relative mb-4">
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-32 h-32 rounded-full border-4 border-emerald-500/20 object-cover shadow-lg"
+              />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500 text-slate-950 shadow-lg transition hover:bg-emerald-400"
+                title="Upload profile image"
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+            <div className="mb-4 w-full">
+              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Profile Image URL
+              </label>
+              <input
+                value={userAvatar}
+                onChange={(event) => setUserAvatar(event.target.value)}
+                placeholder="Paste image URL or upload locally"
+                className="w-full rounded-xl border border-[#38434f] bg-slate-900 px-3 py-2 text-xs font-semibold text-white placeholder-slate-600 outline-none transition focus:border-emerald-500/50"
+              />
+            </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-black border border-emerald-500/20 mb-4 uppercase tracking-widest">
               <Sparkles className="w-3.5 h-3.5" />
               Foundry Profile

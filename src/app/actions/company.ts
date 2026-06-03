@@ -26,14 +26,6 @@ export async function createCompanyPage(formData: FormData) {
     if (!dbUsers.length) return { success: false, error: "User not found." };
     const dbUser = dbUsers[0];
 
-    // One company page per user
-    const existing = await db
-      .select({ id: companyPages.id })
-      .from(companyPages)
-      .where(eq(companyPages.ownerId, dbUser.id))
-      .limit(1);
-    if (existing.length) return { success: false, error: "You already have a company page." };
-
     const name = (formData.get("name") as string).trim();
     const tagline = (formData.get("tagline") as string).trim();
     const about = (formData.get("about") as string).trim();
@@ -142,6 +134,33 @@ export async function getMyCompanyPage() {
     };
   } catch (err: any) {
     return { success: false, page: null };
+  }
+}
+
+export async function getMyCompanyPages() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return { success: false, pages: [] };
+
+    const email = session.user.email.toLowerCase().trim();
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!dbUsers.length) return { success: false, pages: [] };
+
+    const rows = await db
+      .select()
+      .from(companyPages)
+      .where(eq(companyPages.ownerId, dbUsers[0].id))
+      .orderBy(desc(companyPages.createdAt));
+
+    return {
+      success: true,
+      pages: rows.map((page) => ({
+        ...page,
+        specialties: JSON.parse(page.specialtiesJson || "[]") as string[],
+      })),
+    };
+  } catch (err: any) {
+    return { success: false, pages: [], error: err.message };
   }
 }
 
