@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { getPosts } from "@/app/actions/posts";
 import FeedPostCard from "@/components/FeedPostCard";
 import PostComposerModal from "@/components/PostComposerModal";
-import { Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy, ShoppingBag } from "lucide-react";
+import { Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy, ShoppingBag, Building2 } from "lucide-react";
 
 const MODULES = [
   {
@@ -69,6 +69,16 @@ const MODULES = [
     bg: "bg-indigo-500/10",
     activeBg: "bg-indigo-500/20",
     border: "border-indigo-500/30",
+  },
+  {
+    label: "Company Pages",
+    href: "/company",
+    description: "Discover & create company pages",
+    icon: Building2,
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/10",
+    activeBg: "bg-cyan-500/20",
+    border: "border-cyan-500/30",
   },
 ];
 

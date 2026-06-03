@@ -116,7 +116,7 @@ export default function Header() {
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <button className={`flex items-center gap-1 text-xs font-bold tracking-wide transition-all ${
-              activeDropdown === "modules" || ["/teams", "/jobs", "/challenges"].includes(pathname)
+              activeDropdown === "modules" || ["/teams", "/jobs", "/challenges", "/company"].some(p => pathname.startsWith(p))
                 ? "text-emerald-400" 
                 : "text-slate-400 hover:text-white"
             }`}>
@@ -171,6 +171,19 @@ export default function Header() {
                     <div>
                       <p className="text-xs font-bold text-white">Jobs & Placements</p>
                       <p className="text-[9.5px] text-slate-400 font-medium">Bypass resumes via skill matching</p>
+                    </div>
+                  </Link>
+
+                  <Link 
+                    href="/company" 
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group"
+                  >
+                    <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Company Pages</p>
+                      <p className="text-[9.5px] text-slate-400 font-medium">Create & discover companies</p>
                     </div>
                   </Link>
 
@@ -388,6 +401,7 @@ export default function Header() {
                   <Link href="/freelance" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Freelance</Link>
                   <Link href="/challenges" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-rose-400" /> Challenges</Link>
                   <Link href="/mvps" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5 text-indigo-400" /> MVPs</Link>
+                  <Link href="/company" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-cyan-400" /> Companies</Link>
                   {isSignedIn && <Link href="/myposts" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Layers className="w-3.5 h-3.5 text-emerald-400" /> My Posts</Link>}
                 </div>
               </div>
