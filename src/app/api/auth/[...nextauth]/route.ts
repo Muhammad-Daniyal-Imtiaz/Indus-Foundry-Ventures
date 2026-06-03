@@ -8,18 +8,8 @@ import { eq } from "drizzle-orm";
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      },
-      httpOptions: {
-        timeout: 30000 // 30 seconds instead of 3.5 seconds
-      }
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -101,21 +91,25 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role || "None";
-        token.avatarUrl = user.image || user.avatarUrl;
-      }
-      
-      // Load latest user details from Turso DB to ensure sync
-      if (token.email) {
-        const dbUsers = await db.select().from(users).where(eq(users.email, token.email.toLowerCase().trim())).limit(1);
-        if (dbUsers.length > 0) {
-          token.id = dbUsers[0].id;
-          token.role = dbUsers[0].role;
-          token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+    async jwt({ token, user, account }: any) {
+      // Only sync with DB on sign-in (user object only exists on first call)
+      if (user || account) {
+        const email = token.email?.toLowerCase().trim();
+        if (email) {
+          const dbUsers = await db
+            .select({ id: users.id, role: users.role, avatarUrl: users.avatarUrl })
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+          if (dbUsers.length > 0) {
+            token.id = dbUsers[0].id;
+            token.role = dbUsers[0].role;
+            token.avatarUrl = dbUsers[0].avatarUrl || user?.image;
+          }
         }
+        // Strip large Google fields that bloat the JWT cookie
+        delete token.picture;
+        delete token.sub;
       }
       return token;
     },
@@ -135,7 +129,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "indus-foundry-secret-key-123456",
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
