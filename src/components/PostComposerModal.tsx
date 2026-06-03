@@ -29,6 +29,7 @@ type PostComposerModalProps = {
   open: boolean;
   onClose: () => void;
   onCreated: (post: any) => void;
+  userInfo?: any;
 };
 
 function readFileAsDataUrl(file: File) {
@@ -40,8 +41,9 @@ function readFileAsDataUrl(file: File) {
   });
 }
 
-export default function PostComposerModal({ open, onClose, onCreated }: PostComposerModalProps) {
+export default function PostComposerModal({ open, onClose, onCreated, userInfo }: PostComposerModalProps) {
   const { data: session } = useSession();
+  const isAuthenticated = !!session || !!userInfo;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -151,7 +153,7 @@ export default function PostComposerModal({ open, onClose, onCreated }: PostComp
               </button>
             </div>
 
-            {!session ? (
+            {!isAuthenticated ? (
               <div className="p-8 text-center">
                 <AlertCircle className="mx-auto mb-3 h-10 w-10 text-slate-600" />
                 <h3 className="text-sm font-black uppercase tracking-wider">Sign in to post</h3>

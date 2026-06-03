@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -9,6 +9,7 @@ import { getPosts } from "@/app/actions/posts";
 import { checkUserStatus } from "@/app/actions/user";
 import FeedPostCard from "@/components/FeedPostCard";
 import PostComposerModal from "@/components/PostComposerModal";
+import JobsPage from "@/app/jobs/page";
 import {
   Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy,
   ShoppingBag, Building2, UserCircle2, ChevronRight, Pencil, BookOpen,
@@ -101,6 +102,7 @@ export default function FeedPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"feed" | "jobs">("feed");
 
   useEffect(() => {
     async function loadFeed() {
@@ -170,7 +172,34 @@ export default function FeedPage() {
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/4 blur-[140px] pointer-events-none animate-pulse-glow"></div>
       <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/3 blur-[140px] pointer-events-none"></div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      {/* Mode Toggle */}
+      <div className="max-w-6xl mx-auto relative z-20 mb-6 flex justify-center">
+        <div className="bg-[#1d2226] border border-[#38434f] rounded-full p-1 flex gap-1 shadow-lg">
+          <button
+            onClick={() => setViewMode("feed")}
+            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+              viewMode === "feed" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Feed Mode
+          </button>
+          <button
+            onClick={() => setViewMode("jobs")}
+            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+              viewMode === "jobs" ? "bg-teal-500 text-slate-950" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Job Mode
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "jobs" ? (
+        <div className="relative z-10 bg-[var(--background)] rounded-2xl overflow-hidden border border-[#38434f]">
+          <JobsPage />
+        </div>
+      ) : (
+        <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
           {/* Left Sidebar: User Profile Card + Stats */}
@@ -481,11 +510,13 @@ export default function FeedPage() {
           </div>
 
         </div>
-      </div>
+        </div>
+      )}
       <PostComposerModal
         open={composerOpen}
         onClose={() => setComposerOpen(false)}
         onCreated={(post) => setPostsList((current) => [post, ...current])}
+        userInfo={userInfo}
       />
     </div>
   );

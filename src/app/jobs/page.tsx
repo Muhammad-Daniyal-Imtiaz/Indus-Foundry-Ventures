@@ -198,7 +198,7 @@ export default function JobsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-white truncate">{job.title}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{job.companyName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{job.companyName} {job.department && <span className="text-slate-600">·</span>} {job.department}</p>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${EXP_COLORS[job.experienceLevel] || EXP_COLORS.Mid}`}>{job.experienceLevel}</span>
                         <span className="flex items-center gap-0.5 text-[9px] text-slate-500 font-semibold">{LOC_ICONS[job.locationType]}{job.locationType}</span>
@@ -244,6 +244,12 @@ export default function JobsPage() {
                               <Link href={`/company/${selectedJob.companySlug}`} className="text-sm text-teal-400 font-bold hover:underline">{selectedJob.companyName}</Link>
                             ) : (
                               <span className="text-sm text-slate-400 font-bold">{selectedJob.companyName}</span>
+                            )}
+                            {selectedJob.department && (
+                              <>
+                                <span className="text-slate-600">·</span>
+                                <span className="text-xs text-slate-400 font-semibold">{selectedJob.department}</span>
+                              </>
                             )}
                             <span className="text-slate-600">·</span>
                             <span className="text-xs text-slate-500">{selectedJob.industry}</span>
@@ -301,6 +307,12 @@ export default function JobsPage() {
 
                     {/* Detail Body - scrollable */}
                     <div className="p-6 space-y-6 max-h-[calc(100vh-400px)] overflow-y-auto">
+                      {/* Description */}
+                      <div>
+                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 font-mono">About this Role</h4>
+                        <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
+                      </div>
+
                       {/* Skills */}
                       {selectedJob.skills?.length > 0 && (
                         <div>
@@ -312,12 +324,6 @@ export default function JobsPage() {
                           </div>
                         </div>
                       )}
-
-                      {/* Description */}
-                      <div>
-                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 font-mono">About this Role</h4>
-                        <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
-                      </div>
 
                       {/* Requirements */}
                       {selectedJob.requirements?.length > 0 && (

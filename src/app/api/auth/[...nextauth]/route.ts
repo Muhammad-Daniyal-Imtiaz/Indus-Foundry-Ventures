@@ -16,6 +16,9 @@ export const authOptions: NextAuthOptions = {
           access_type: "offline",
           response_type: "code"
         }
+      },
+      httpOptions: {
+        timeout: 30000 // 30 seconds instead of 3.5 seconds
       }
     }),
     CredentialsProvider({

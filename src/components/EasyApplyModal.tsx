@@ -17,6 +17,7 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [resumeUrl, setResumeUrl] = useState("");
+  const [coverLetterUrl, setCoverLetterUrl] = useState("");
   const [portfolioLink, setPortfolioLink] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
 
   const handleApply = async () => {
     if (!name.trim() || !email.trim() || !address.trim() || !resumeUrl.trim()) {
-      setError("Name, Email, Address, and CV Link are required.");
+      setError("Name, Email, Address, and CV File are required.");
       return;
     }
     setError("");
@@ -45,6 +46,9 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
     fd.append("resumeUrl", resumeUrl.trim());
     if (portfolioLink.trim()) {
       fd.append("portfolioLink", portfolioLink.trim());
+    }
+    if (coverLetterUrl.trim()) {
+      fd.append("coverLetterUrl", coverLetterUrl.trim());
     }
 
     const res = await applyForJob(job.id, fd);
@@ -156,19 +160,26 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
                 />
               </div>
 
-              {/* Resume / CV URL */}
+              {/* Resume / CV File Upload */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
                   <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
-                  CV / Resume Link *
+                  CV / Resume File *
                 </label>
                 <input
-                  value={resumeUrl}
-                  onChange={(e) => setResumeUrl(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                  placeholder="https://drive.google.com/file/d/..."
+                  type="file"
+                  accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => setResumeUrl(reader.result as string);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20"
                 />
-                <p className="text-[10px] text-slate-500 mt-1">Provide a link to your PDF resume (Google Drive, Dropbox, etc.)</p>
+                {resumeUrl && <p className="text-[10px] text-slate-400 mt-1">CV loaded successfully.</p>}
               </div>
 
               {/* Portfolio Link */}
@@ -183,6 +194,28 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
                   className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                   placeholder="https://daniyal.dev"
                 />
+              </div>
+
+              {/* Cover Letter File Upload */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                  <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
+                  Cover Letter File
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => setCoverLetterUrl(reader.result as string);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20"
+                />
+                {coverLetterUrl && <p className="text-[10px] text-slate-400 mt-1">Cover letter loaded successfully.</p>}
               </div>
 
               {error && (

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Briefcase, Loader2, CheckCircle2, AlertCircle, Plus, Trash2 } from "lucide-react";
-import { createJobPosting } from "@/app/actions/jobs";
+import { createJobPosting, updateJobPosting } from "@/app/actions/jobs";
 import { motion } from "framer-motion";
 
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Internship"];
@@ -16,25 +16,26 @@ interface PostJobModalProps {
   onClose: () => void;
   onCreated: (job: any) => void;
   companies: any[];
+  editJob?: any;
 }
 
-export default function PostJobModal({ onClose, onCreated, companies }: PostJobModalProps) {
+export default function PostJobModal({ onClose, onCreated, companies, editJob }: PostJobModalProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [reqInput, setReqInput] = useState("");
   const [benInput, setBenInput] = useState("");
-  const [skills, setSkills] = useState<string[]>([]);
-  const [requirements, setRequirements] = useState<string[]>([]);
-  const [benefits, setBenefits] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[]>(editJob?.skills || []);
+  const [requirements, setRequirements] = useState<string[]>(editJob?.requirements || []);
+  const [benefits, setBenefits] = useState<string[]>(editJob?.benefits || []);
 
   const [form, setForm] = useState({
-    companyPageId: companies[0]?.id || "",
-    title: "", department: "", employmentType: "Full-time", locationType: "On-site",
-    location: "", salaryMin: "", salaryMax: "", salaryCurrency: "PKR", salaryPeriod: "Monthly",
-    experienceLevel: "Mid", industry: "", description: "",
-    applicationDeadline: "",
+    companyPageId: editJob?.companyPageId || companies[0]?.id || "",
+    title: editJob?.title || "", department: editJob?.department || "", employmentType: editJob?.employmentType || "Full-time", locationType: editJob?.locationType || "On-site",
+    location: editJob?.location || "", salaryMin: editJob?.salaryMin || "", salaryMax: editJob?.salaryMax || "", salaryCurrency: editJob?.salaryCurrency || "PKR", salaryPeriod: editJob?.salaryPeriod || "Monthly",
+    experienceLevel: editJob?.experienceLevel || "Mid", industry: editJob?.industry || "", description: editJob?.description || "",
+    applicationDeadline: editJob?.applicationDeadline || "",
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -57,7 +58,12 @@ export default function PostJobModal({ onClose, onCreated, companies }: PostJobM
     fd.append("requirements", JSON.stringify(requirements));
     fd.append("benefits", JSON.stringify(benefits));
 
-    const res = await createJobPosting(fd);
+    let res;
+    if (editJob) {
+      res = await updateJobPosting(editJob.id, fd);
+    } else {
+      res = await createJobPosting(fd);
+    }
     setLoading(false);
     if (res.success) {
       onCreated(res.job);
@@ -87,7 +93,7 @@ export default function PostJobModal({ onClose, onCreated, companies }: PostJobM
           </button>
           <div className="flex items-center gap-2 mb-1">
             <Briefcase className="w-4 h-4 text-teal-400" />
-            <h2 className="text-sm font-black text-white">Post a Job</h2>
+            <h2 className="text-sm font-black text-white">{editJob ? "Edit Job Posting" : "Post a Job"}</h2>
           </div>
           <p className="text-[10px] text-slate-500">Step {step} of 2</p>
           <div className="flex gap-1.5 mt-2">
@@ -288,8 +294,9 @@ export default function PostJobModal({ onClose, onCreated, companies }: PostJobM
             <>
               <button onClick={() => setStep(1)} className="flex-1 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-slate-300 text-xs font-bold hover:bg-slate-700 transition-all">← Back</button>
               <button onClick={handleSubmit} disabled={loading || !form.description || companies.length === 0}
-                className="flex-1 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-2">
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Posting...</> : <><CheckCircle2 className="w-4 h-4" /> Post Job</>}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-2">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                {editJob ? "Update Job" : "Post Job"}
               </button>
             </>
           )}

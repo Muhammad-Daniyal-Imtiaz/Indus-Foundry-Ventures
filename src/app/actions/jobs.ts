@@ -187,6 +187,7 @@ export async function applyForJob(jobId: string, formData: FormData) {
     const portfolioLink = (formData.get("portfolioLink") as string)?.trim() || null;
     const phone = (formData.get("phone") as string)?.trim() || null;
     const coverNote = (formData.get("coverNote") as string)?.trim() || null;
+    const coverLetterUrl = (formData.get("coverLetterUrl") as string)?.trim() || "";
 
     if (!name || !candidateEmail || !address || !resumeUrl) {
       return { success: false, error: "Name, Email, Address, and CV (Resume URL) are required." };
@@ -204,6 +205,7 @@ export async function applyForJob(jobId: string, formData: FormData) {
       portfolioLink,
       phone,
       coverNote,
+      coverLetterUrl,
     };
 
     await db.insert(jobApplications).values(application);
@@ -218,6 +220,112 @@ export async function applyForJob(jobId: string, formData: FormData) {
   } catch (err: any) {
     console.error("applyForJob error:", err);
     return { success: false, error: err.message || "Failed to submit application." };
+  }
+}
+
+export async function deleteJobPosting(jobId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
+    const email = session.user.email.toLowerCase().trim();
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!dbUsers.length) return { success: false, error: "User not found." };
+    const dbUser = dbUsers[0];
+
+    const jobRows = await db.select().from(jobPostings).where(eq(jobPostings.id, jobId)).limit(1);
+    if (!jobRows.length) return { success: false, error: "Job not found." };
+    const job = jobRows[0];
+
+    // Check if user is the owner of the company page
+    if (!job.companyPageId) {
+      return { success: false, error: "Invalid job posting." };
+    }
+    const companyRows = await db.select().from(companyPages).where(eq(companyPages.id, job.companyPageId)).limit(1);
+    if (!companyRows.length || companyRows[0].ownerId !== dbUser.id) {
+      return { success: false, error: "Unauthorized. Only the company owner can delete this job." };
+    }
+
+    await db.delete(jobApplications).where(eq(jobApplications.jobId, jobId));
+    await db.delete(jobPostings).where(eq(jobPostings.id, jobId));
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("deleteJobPosting error:", err);
+    return { success: false, error: err.message || "Failed to delete job." };
+  }
+}
+
+export async function updateJobPosting(jobId: string, formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
+    const email = session.user.email.toLowerCase().trim();
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!dbUsers.length) return { success: false, error: "User not found." };
+    const dbUser = dbUsers[0];
+
+    const jobRows = await db.select().from(jobPostings).where(eq(jobPostings.id, jobId)).limit(1);
+    if (!jobRows.length) return { success: false, error: "Job not found." };
+    const existingJob = jobRows[0];
+
+    if (!existingJob.companyPageId) {
+      return { success: false, error: "Invalid job posting." };
+    }
+    const companyRows = await db.select().from(companyPages).where(eq(companyPages.id, existingJob.companyPageId)).limit(1);
+    if (!companyRows.length || companyRows[0].ownerId !== dbUser.id) {
+      return { success: false, error: "Unauthorized. Only the company owner can edit this job." };
+    }
+
+    const title = (formData.get("title") as string).trim();
+    const department = (formData.get("department") as string) || null;
+    const employmentType = formData.get("employmentType") as string;
+    const locationType = formData.get("locationType") as string;
+    const location = (formData.get("location") as string).trim();
+    const salaryMin = parseInt(formData.get("salaryMin") as string) || null;
+    const salaryMax = parseInt(formData.get("salaryMax") as string) || null;
+    const salaryCurrency = (formData.get("salaryCurrency") as string) || "PKR";
+    const salaryPeriod = (formData.get("salaryPeriod") as string) || "Monthly";
+    const experienceLevel = formData.get("experienceLevel") as string;
+    const industry = formData.get("industry") as string;
+    const skillsRaw = formData.get("skills") as string;
+    const skills = skillsRaw ? JSON.parse(skillsRaw) : [];
+    const description = (formData.get("description") as string).trim();
+    const requirementsRaw = formData.get("requirements") as string;
+    const requirements = requirementsRaw ? JSON.parse(requirementsRaw) : [];
+    const benefitsRaw = formData.get("benefits") as string;
+    const benefits = benefitsRaw ? JSON.parse(benefitsRaw) : [];
+    const deadline = (formData.get("applicationDeadline") as string) || null;
+
+    const jobUpdate = {
+      title,
+      department,
+      employmentType,
+      locationType,
+      location,
+      salaryMin,
+      salaryMax,
+      salaryCurrency,
+      salaryPeriod,
+      experienceLevel,
+      industry,
+      skillsJson: JSON.stringify(skills),
+      description,
+      requirementsJson: JSON.stringify(requirements),
+      benefitsJson: JSON.stringify(benefits),
+      applicationDeadline: deadline,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    };
+
+    await db.update(jobPostings).set(jobUpdate).where(eq(jobPostings.id, jobId));
+    return {
+      success: true,
+      job: { ...existingJob, ...jobUpdate, skills, requirements, benefits },
+    };
+  } catch (err: any) {
+    console.error("updateJobPosting error:", err);
+    return { success: false, error: err.message || "Failed to update job posting." };
   }
 }
 

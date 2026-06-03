@@ -6,11 +6,12 @@ import Link from "next/link";
 import {
   Building2, Globe, X as XIcon, Link2, MapPin, Users, Calendar,
   Briefcase, Tag, Sparkles, ChevronRight, Loader2, AlertCircle,
-  ExternalLink, Plus, CheckCircle2, Zap, Mail, Download
+  ExternalLink, Plus, CheckCircle2, Zap, Mail, Download, Paperclip
 } from "lucide-react";
 import { getCompanyPageBySlug, getCompanySubmissions } from "@/app/actions/company";
-import { getAllJobs } from "@/app/actions/jobs";
+import { getAllJobs, deleteJobPosting } from "@/app/actions/jobs";
 import EasyApplyModal from "@/components/EasyApplyModal";
+import PostJobModal from "@/components/PostJobModal";
 
 const STAGE_COLORS: Record<string, string> = {
   Idea: "bg-slate-500/10 text-slate-400 border-slate-500/20",
@@ -25,6 +26,7 @@ export default function CompanyProfilePage() {
   const slug = params?.slug as string;
 
   const [page, setPage] = useState<any>(null);
+
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"about" | "jobs" | "submissions">("about");
@@ -32,6 +34,18 @@ export default function CompanyProfilePage() {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [postJobOpen, setPostJobOpen] = useState(false);
+  const [editJob, setEditJob] = useState<any>(null);
+
+  async function handleDeleteJob(jobId: string) {
+    if (!confirm("Are you sure you want to delete this job posting?")) return;
+    const res = await deleteJobPosting(jobId);
+    if (res.success) {
+      setJobs(jobs.filter(j => j.id !== jobId));
+    } else {
+      alert(res.error || "Failed to delete job.");
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -193,6 +207,15 @@ export default function CompanyProfilePage() {
 
         {activeTab === "jobs" && (
           <div className="pb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-sm font-bold text-white">Open Roles</h3>
+              {isOwner && (
+                <button onClick={() => setPostJobOpen(true)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all">
+                  <Plus className="w-3.5 h-3.5" /> Post Job
+                </button>
+              )}
+            </div>
+            
             {jobs.length === 0 ? (
               <div className="text-center py-16 bg-[#1d2226] border border-[#38434f] rounded-xl">
                 <Briefcase className="w-10 h-10 text-slate-600 mx-auto mb-3" />
@@ -275,6 +298,16 @@ export default function CompanyProfilePage() {
                         <Zap className="w-3.5 h-3.5 fill-current" /> Easy Apply
                       </button>
                     </div>
+                    {isOwner && (
+                      <div className="mt-3 pt-3 border-t border-white/5 flex justify-end gap-2">
+                        <button onClick={() => { setEditJob(job); setPostJobOpen(true); }} className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white text-xs font-bold border border-white/10 transition-all">
+                          Edit
+                        </button>
+                        <button onClick={() => handleDeleteJob(job.id)} className="px-3 py-1.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold border border-red-500/20 transition-all">
+                          Delete Job
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -336,6 +369,12 @@ export default function CompanyProfilePage() {
                           <Globe className="w-3.5 h-3.5" /> Portfolio
                         </a>
                       )}
+                      {sub.coverLetterUrl && (
+                        <a href={sub.coverLetterUrl} target="_blank" rel="noreferrer"
+                          className="px-4 py-2 rounded-lg bg-slate-800 border border-white/10 hover:border-purple-500/20 text-slate-300 hover:text-purple-400 text-xs font-bold transition-all flex items-center gap-1.5">
+                          <Paperclip className="w-3.5 h-3.5" /> Cover Letter
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -346,6 +385,23 @@ export default function CompanyProfilePage() {
       </div>
 
       {applyJob && <EasyApplyModal job={applyJob} onClose={() => setApplyJob(null)} />}
+      
+      {postJobOpen && (
+        <PostJobModal
+          onClose={() => { setPostJobOpen(false); setEditJob(null); }}
+          onCreated={(j) => {
+            if (editJob) {
+              setJobs(jobs.map((job) => (job.id === j.id ? j : job)));
+            } else {
+              setJobs([j, ...jobs]);
+            }
+            setPostJobOpen(false);
+            setEditJob(null);
+          }}
+          companies={[page]}
+          editJob={editJob}
+        />
+      )}
     </div>
   );
 }
