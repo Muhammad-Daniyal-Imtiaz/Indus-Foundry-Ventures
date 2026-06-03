@@ -69,7 +69,7 @@ export default function JobsPage() {
     const q = search.toLowerCase();
     const matchSearch = !q || j.title.toLowerCase().includes(q) ||
       j.companyName.toLowerCase().includes(q) ||
-      j.skills.some((s: string) => s.toLowerCase().includes(q)) ||
+      (j.skills && Array.isArray(j.skills) && j.skills.some((s: string) => typeof s === "string" && s.toLowerCase().includes(q))) ||
       j.location.toLowerCase().includes(q);
     const matchIndustry = industry === "All" || j.industry === industry;
     const matchExp = expLevel === "All" || j.experienceLevel === expLevel;

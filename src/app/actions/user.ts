@@ -14,24 +14,39 @@ export async function checkUserStatus() {
     }
 
     const email = session.user.email?.toLowerCase().trim() || "";
+    const sessionName = session.user.name || "User";
+    const sessionImage = session.user.image || "";
+
     // Check if user exists in Turso DB
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
     if (existingUsers.length > 0) {
-      const hasRole = !!existingUsers[0].role && existingUsers[0].role !== "None";
+      const dbUser = existingUsers[0];
+      const hasRole = !!dbUser.role && dbUser.role !== "None";
       return { 
         isAuthenticated: true, 
         hasRole, 
-        user: existingUsers[0] 
+        user: {
+          ...dbUser,
+          // Prefer DB avatar but fall back to session image (Google avatar)
+          avatarUrl: dbUser.avatarUrl || sessionImage,
+        }
       };
     }
 
+    // Authenticated via Google but not yet onboarded — return session data as user shape
     return { 
       isAuthenticated: true, 
       hasRole: false, 
-      clerkEmail: email,
-      clerkName: session.user.name || "User",
-      clerkAvatar: session.user.image || ""
+      user: {
+        id: "",
+        email,
+        name: sessionName,
+        role: "None",
+        avatarUrl: sessionImage,
+        createdAt: "",
+        updatedAt: "",
+      }
     };
   } catch (error) {
     console.error("Error checking user status:", error);

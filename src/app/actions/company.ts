@@ -3,8 +3,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/db";
-import { companyPages, users } from "@/db/schema";
-import { eq, desc, like, sql } from "drizzle-orm";
+import { companyPages, users, jobPostings, jobApplications } from "@/db/schema";
+import { eq, desc, like, sql, and } from "drizzle-orm";
 
 function generateSlug(name: string): string {
   return name
@@ -182,5 +182,57 @@ export async function getAllCompanyPages(limit = 20, offset = 0) {
     };
   } catch (err: any) {
     return { success: false, pages: [], error: err.message };
+  }
+}
+
+export async function getCompanySubmissions(slug: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
+    const email = session.user.email.toLowerCase().trim();
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!dbUsers.length) return { success: false, error: "User not found." };
+    const dbUser = dbUsers[0];
+
+    const companyRows = await db
+      .select()
+      .from(companyPages)
+      .where(eq(companyPages.slug, slug))
+      .limit(1);
+
+    if (!companyRows.length) return { success: false, error: "Company page not found." };
+    const company = companyRows[0];
+
+    // Check ownership
+    if (company.ownerId !== dbUser.id) {
+      return { success: false, error: "You are not the owner of this company page." };
+    }
+
+    const apps = await db
+      .select({
+        id: jobApplications.id,
+        jobId: jobApplications.jobId,
+        applicantUserId: jobApplications.applicantUserId,
+        name: jobApplications.name,
+        email: jobApplications.email,
+        address: jobApplications.address,
+        resumeUrl: jobApplications.resumeUrl,
+        portfolioLink: jobApplications.portfolioLink,
+        phone: jobApplications.phone,
+        coverNote: jobApplications.coverNote,
+        status: jobApplications.status,
+        createdAt: jobApplications.createdAt,
+        jobTitle: jobPostings.title,
+      })
+      .from(jobApplications)
+      .innerJoin(jobPostings, eq(jobApplications.jobId, jobPostings.id))
+      .where(eq(jobPostings.companyPageId, company.id))
+      .orderBy(desc(jobApplications.createdAt));
+
+    return { success: true, submissions: apps };
+  } catch (err: any) {
+    console.error("getCompanySubmissions error:", err);
+    return { success: false, error: err.message || "Failed to retrieve submissions." };
   }
 }

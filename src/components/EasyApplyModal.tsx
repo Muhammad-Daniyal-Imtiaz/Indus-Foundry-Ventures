@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Zap, Loader2, CheckCircle2, AlertCircle, Paperclip, Phone } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Zap, Loader2, CheckCircle2, AlertCircle, Paperclip, User, Mail, MapPin, Globe } from "lucide-react";
 import { applyForJob } from "@/app/actions/jobs";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 
 interface EasyApplyModalProps {
   job: any;
@@ -11,25 +12,40 @@ interface EasyApplyModalProps {
 }
 
 export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
+  const { data: session } = useSession();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [resumeUrl, setResumeUrl] = useState("");
-  const [phone, setPhone] = useState("");
-  const [coverNote, setCoverNote] = useState("");
+  const [portfolioLink, setPortfolioLink] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (session?.user) {
+      setName(session.user.name || "");
+      setEmail(session.user.email || "");
+    }
+  }, [session]);
+
   const handleApply = async () => {
-    if (!resumeUrl.trim() || !phone.trim()) {
-      setError("Resume URL and phone are required.");
+    if (!name.trim() || !email.trim() || !address.trim() || !resumeUrl.trim()) {
+      setError("Name, Email, Address, and CV Link are required.");
       return;
     }
     setError("");
     setLoading(true);
 
     const fd = new FormData();
+    fd.append("name", name.trim());
+    fd.append("email", email.trim());
+    fd.append("address", address.trim());
     fd.append("resumeUrl", resumeUrl.trim());
-    fd.append("phone", phone.trim());
-    if (coverNote.trim()) fd.append("coverNote", coverNote.trim());
+    if (portfolioLink.trim()) {
+      fd.append("portfolioLink", portfolioLink.trim());
+    }
 
     const res = await applyForJob(job.id, fd);
     setLoading(false);
@@ -70,8 +86,23 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Job Description Preview */}
+          <div className="p-4 bg-slate-900/60 border border-white/5 rounded-xl text-left">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">Job Description Summary</h4>
+            <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line max-h-32 overflow-y-auto pr-1">
+              {job.description || "No description provided."}
+            </p>
+            {job.skills?.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {job.skills.map((s: string) => (
+                  <span key={s} className="px-2 py-0.5 rounded bg-slate-800 border border-white/5 text-[9px] text-slate-400 font-semibold">{s}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {success ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="flex flex-col items-center justify-center py-8 text-center animate-pulse">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
               </div>
@@ -82,48 +113,76 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
             </div>
           ) : (
             <>
-              {/* Resume URL */}
+              {/* Full Name */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                  <User className="w-3.5 h-3.5 text-emerald-400" />
+                  Full Name *
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                  placeholder="Muhammad Daniyal"
+                />
+              </div>
+
+              {/* Email Address */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                  <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                  placeholder="name@domain.com"
+                />
+              </div>
+
+              {/* Address / Location */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  Address / City *
+                </label>
+                <input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                  placeholder="e.g. Lahore, Pakistan"
+                />
+              </div>
+
+              {/* Resume / CV URL */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
                   <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
-                  Resume / Portfolio URL *
+                  CV / Resume Link *
                 </label>
                 <input
                   value={resumeUrl}
                   onChange={(e) => setResumeUrl(e.target.value)}
                   className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                  placeholder="https://linkedin.com/in/yourprofile or drive link"
+                  placeholder="https://drive.google.com/file/d/..."
                 />
-                <p className="text-[10px] text-slate-500 mt-1">LinkedIn profile, Google Drive PDF, or portfolio website</p>
+                <p className="text-[10px] text-slate-500 mt-1">Provide a link to your PDF resume (Google Drive, Dropbox, etc.)</p>
               </div>
 
-              {/* Phone */}
+              {/* Portfolio Link */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                  Contact Phone *
+                  <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  Portfolio Website Link
                 </label>
                 <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={portfolioLink}
+                  onChange={(e) => setPortfolioLink(e.target.value)}
                   className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                  placeholder="+92 300 1234567"
+                  placeholder="https://daniyal.dev"
                 />
-              </div>
-
-              {/* Cover Note (optional) */}
-              <div>
-                <label className="text-xs font-bold text-slate-300 mb-1.5 block">
-                  Cover Note <span className="text-slate-500 font-normal">(Optional, max 280 chars)</span>
-                </label>
-                <textarea
-                  value={coverNote}
-                  onChange={(e) => setCoverNote(e.target.value.slice(0, 280))}
-                  rows={3}
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all resize-none"
-                  placeholder="Why you're interested in this role..."
-                />
-                <p className="text-[10px] text-slate-500 mt-1 text-right">{coverNote.length}/280</p>
               </div>
 
               {error && (
@@ -132,11 +191,6 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
                   {error}
                 </div>
               )}
-
-              {/* Privacy note */}
-              <div className="p-3 rounded-lg bg-slate-900/50 border border-white/5 text-[10px] text-slate-500 leading-relaxed">
-                ✓ Your contact info will only be shared with {job.companyName}. By applying, you agree to their terms.
-              </div>
             </>
           )}
         </div>

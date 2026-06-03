@@ -34,17 +34,22 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
-  // Clerk DB Sync State
-  const [dbRole, setDbRole] = useState<string | null>(null);
+  // Server-side user fallback (used when NextAuth client fetch errors)
+  const [userInfo, setUserInfo] = useState<{ name?: string; email?: string; image?: string; role?: string } | null>(null);
 
   useEffect(() => {
     async function loadUser() {
       try {
         const res = await checkUserStatus();
-        if (res.isAuthenticated && res.hasRole && res.user) {
-          setDbRole(res.user.role);
+        if (res.isAuthenticated && res.user) {
+          setUserInfo({
+            name: res.user.name,
+            email: res.user.email,
+            image: res.user.avatarUrl || undefined,
+            role: res.user.role,
+          });
         } else {
-          setDbRole(null);
+          setUserInfo(null);
         }
       } catch (err) {
         console.error("Error loading user in header:", err);
@@ -52,6 +57,10 @@ export default function Header() {
     }
     loadUser();
   }, [pathname]);
+
+  // Effective auth state — client session OR server-verified user
+  const effectivelySignedIn = isSignedIn || !!userInfo;
+  const effectiveUser = session?.user || userInfo;
 
 
 
@@ -316,7 +325,7 @@ export default function Header() {
         {/* Action Button & Clerk Auth Controls */}
         <div className="flex items-center gap-4 relative">
           
-          {isLoaded && !isSignedIn && (
+          {isLoaded && !effectivelySignedIn && (
             <Link 
               href="/login"
               className="bg-slate-900 border border-white/10 hover:border-emerald-500/30 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all cursor-pointer"
@@ -325,7 +334,7 @@ export default function Header() {
             </Link>
           )}
 
-          {isLoaded && isSignedIn && session && (
+          {isLoaded && effectivelySignedIn && (
             <>
               <Link
                 href="/profile"
@@ -340,11 +349,12 @@ export default function Header() {
                 <span>My Posts</span>
               </Link>
               
-              {/* Custom User Info and Sign Out */}
+              {/* User Avatar & Logout */}
               <div className="flex items-center gap-3 relative shrink-0">
                 <img
-                  src={session.user?.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(session.user?.name || "User")}`}
-                  alt={session.user?.name || "User"}
+                  src={effectiveUser?.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(effectiveUser?.name || "User")}`}
+                  alt={effectiveUser?.name || "User"}
+                  referrerPolicy="no-referrer"
                   className="w-8 h-8 rounded-full border border-white/10 bg-slate-950 object-cover"
                 />
                 <button

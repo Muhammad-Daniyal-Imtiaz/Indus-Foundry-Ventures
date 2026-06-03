@@ -197,10 +197,14 @@ export const jobApplications = sqliteTable(
     id: text("id").primaryKey(),
     jobId: text("job_id").notNull(),             // FK → jobPostings.id
     applicantUserId: text("applicant_user_id").notNull(), // FK → users.id
-    // The 3 core fields shown in the Easy Apply modal
-    resumeUrl: text("resume_url").notNull(),     // Link to resume / portfolio
-    phone: text("phone").notNull(),
-    coverNote: text("cover_note"),               // Optional 280-char note
+    // Candidate fields as requested
+    name: text("name").notNull().default(""),
+    email: text("email").notNull().default(""),
+    address: text("address").notNull().default(""),
+    resumeUrl: text("resume_url").notNull(),     // CV Link
+    portfolioLink: text("portfolio_link"),       // Portfolio / Website Link
+    phone: text("phone"),                        // Made optional
+    coverNote: text("cover_note"),               // Made optional
     // Status lifecycle
     status: text("status").notNull().default("Applied"), // 'Applied' | 'Viewed' | 'Shortlisted' | 'Rejected' | 'Hired'
     ...timestamps,

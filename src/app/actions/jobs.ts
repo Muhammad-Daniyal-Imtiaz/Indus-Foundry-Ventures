@@ -180,13 +180,16 @@ export async function applyForJob(jobId: string, formData: FormData) {
       .limit(1);
 
     if (existingApp.length) return { success: false, error: "You already applied to this job." };
-
-    const resumeUrl = (formData.get("resumeUrl") as string).trim();
-    const phone = (formData.get("phone") as string).trim();
+    const name = (formData.get("name") as string)?.trim();
+    const candidateEmail = (formData.get("email") as string)?.trim();
+    const address = (formData.get("address") as string)?.trim();
+    const resumeUrl = (formData.get("resumeUrl") as string)?.trim();
+    const portfolioLink = (formData.get("portfolioLink") as string)?.trim() || null;
+    const phone = (formData.get("phone") as string)?.trim() || null;
     const coverNote = (formData.get("coverNote") as string)?.trim() || null;
 
-    if (!resumeUrl || !phone) {
-      return { success: false, error: "Resume URL and phone are required." };
+    if (!name || !candidateEmail || !address || !resumeUrl) {
+      return { success: false, error: "Name, Email, Address, and CV (Resume URL) are required." };
     }
 
     const id = `app_${Math.random().toString(36).substring(2, 11)}`;
@@ -194,7 +197,11 @@ export async function applyForJob(jobId: string, formData: FormData) {
       id,
       jobId,
       applicantUserId: dbUser.id,
+      name,
+      email: candidateEmail,
+      address,
       resumeUrl,
+      portfolioLink,
       phone,
       coverNote,
     };
