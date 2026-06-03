@@ -122,6 +122,17 @@ export async function getAllJobs(filters?: {
       filtered = filtered.filter((j) => j.locationType === filters.locationType);
     }
 
+    const session = await getServerSession(authOptions);
+    let userAppliedJobIds = new Set<string>();
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length) {
+        const apps = await db.select({ jobId: jobApplications.jobId }).from(jobApplications).where(eq(jobApplications.applicantUserId, dbUsers[0].id));
+        userAppliedJobIds = new Set(apps.map(a => a.jobId));
+      }
+    }
+
     return {
       success: true,
       jobs: filtered.map((j) => ({
@@ -129,6 +140,7 @@ export async function getAllJobs(filters?: {
         skills: JSON.parse(j.skillsJson || "[]") as string[],
         requirements: JSON.parse(j.requirementsJson || "[]") as string[],
         benefits: JSON.parse(j.benefitsJson || "[]") as string[],
+        hasApplied: userAppliedJobIds.has(j.id),
       })),
     };
   } catch (err: any) {

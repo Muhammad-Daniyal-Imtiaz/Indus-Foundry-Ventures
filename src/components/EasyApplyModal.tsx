@@ -9,9 +9,10 @@ import { useSession } from "next-auth/react";
 interface EasyApplyModalProps {
   job: any;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
+export default function EasyApplyModal({ job, onClose, onSuccess }: EasyApplyModalProps) {
   const { data: session } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,6 +56,7 @@ export default function EasyApplyModal({ job, onClose }: EasyApplyModalProps) {
     setLoading(false);
     if (res.success) {
       setSuccess(true);
+      if (onSuccess) onSuccess();
       setTimeout(onClose, 2500);
     } else {
       setError(res.error || "Failed to submit application.");

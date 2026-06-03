@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Briefcase, Search, MapPin, DollarSign, Zap, Plus, Loader2,
   AlertCircle, Building2, Clock, Users, Filter, X,
-  ChevronDown, Tag, Sparkles, Globe
+  ChevronDown, Tag, Sparkles, Globe, CheckCircle2
 } from "lucide-react";
 import { getAllJobs } from "@/app/actions/jobs";
 import { getMyCompanyPages } from "@/app/actions/company";
@@ -287,9 +287,22 @@ export default function JobsPage() {
                       {/* CTA Buttons */}
                       <div className="flex gap-3">
                         <button
-                          onClick={() => setApplyJob(selectedJob)}
-                          className="flex-1 sm:flex-none sm:px-8 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20">
-                          <Zap className="w-4 h-4 fill-current" /> Easy Apply
+                          onClick={() => !selectedJob.hasApplied && setApplyJob(selectedJob)}
+                          disabled={selectedJob.hasApplied}
+                          className={`flex-1 sm:flex-none sm:px-8 py-2.5 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 shadow-lg ${
+                            selectedJob.hasApplied
+                              ? "bg-slate-800 text-teal-400 border border-teal-500/30 cursor-not-allowed"
+                              : "bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-teal-500/20"
+                          }`}>
+                          {selectedJob.hasApplied ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4" /> Applied
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-4 h-4 fill-current" /> Easy Apply
+                            </>
+                          )}
                         </button>
                         {selectedJob.companySlug && (
                           <Link href={`/company/${selectedJob.companySlug}`}
@@ -360,7 +373,16 @@ export default function JobsPage() {
         )}
       </div>
 
-      {applyJob && <EasyApplyModal job={applyJob} onClose={() => setApplyJob(null)} />}
+      {applyJob && (
+        <EasyApplyModal
+          job={applyJob}
+          onClose={() => setApplyJob(null)}
+          onSuccess={() => {
+            setSelectedJob((prev: any) => prev?.id === applyJob.id ? { ...prev, hasApplied: true } : prev);
+            setJobs((prev: any[]) => prev.map((j) => j.id === applyJob.id ? { ...j, hasApplied: true } : j));
+          }}
+        />
+      )}
       {postModalOpen && (
         <PostJobModal
           onClose={() => setPostModalOpen(false)}

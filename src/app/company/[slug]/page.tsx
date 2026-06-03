@@ -293,9 +293,22 @@ export default function CompanyProfilePage() {
                         {expandedJobId === job.id ? "Hide Details" : "View Description & Details"}
                       </button>
                       <button
-                        onClick={() => setApplyJob(job)}
-                        className="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 fill-current" /> Easy Apply
+                        onClick={() => !job.hasApplied && setApplyJob(job)}
+                        disabled={job.hasApplied}
+                        className={`flex-1 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                          job.hasApplied
+                            ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 cursor-not-allowed"
+                            : "bg-emerald-500 hover:bg-emerald-400 text-slate-950"
+                        }`}>
+                        {job.hasApplied ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Applied
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-3.5 h-3.5 fill-current" /> Easy Apply
+                          </>
+                        )}
                       </button>
                     </div>
                     {isOwner && (
@@ -384,7 +397,15 @@ export default function CompanyProfilePage() {
         )}
       </div>
 
-      {applyJob && <EasyApplyModal job={applyJob} onClose={() => setApplyJob(null)} />}
+      {applyJob && (
+        <EasyApplyModal
+          job={applyJob}
+          onClose={() => setApplyJob(null)}
+          onSuccess={() => {
+            setJobs((prev: any[]) => prev.map((j) => j.id === applyJob.id ? { ...j, hasApplied: true } : j));
+          }}
+        />
+      )}
       
       {postJobOpen && (
         <PostJobModal
