@@ -33,6 +33,7 @@ export default function ChallengesPage() {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
+  const [viewFilter, setViewFilter] = useState<"all" | "mine">("all");
   const [showPostModal, setShowPostModal] = useState(false);
   const [editChallenge, setEditChallenge] = useState<any>(null);
 
@@ -81,12 +82,14 @@ export default function ChallengesPage() {
     loadData();
   }, [session]);
 
+  const companyIds = companies.map(c => c.id);
   const filteredChallenges = challenges.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           c.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTag = selectedTag === "All" || c.category === selectedTag;
-    return matchesSearch && matchesTag;
+    const matchesView = viewFilter === "all" || companyIds.includes(c.companyPageId);
+    return matchesSearch && matchesTag && matchesView;
   });
 
   const loadUserTeamAndSubmission = async (challengeId: string) => {
@@ -276,6 +279,26 @@ export default function ChallengesPage() {
           </button>
         </div>
 
+        {/* View Tabs */}
+        {session && (
+          <div className="flex items-center gap-1 mb-6 bg-[#1d2226] p-1 rounded-lg border border-[#38434f] w-fit">
+            {[
+              { key: "all" as const, label: "All Challenges" },
+              { key: "mine" as const, label: "Posted by Me" },
+            ].map(tab => (
+              <button key={tab.key} onClick={() => setViewFilter(tab.key)}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  viewFilter === tab.key
+                    ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div className="relative flex-1 max-w-md">
@@ -309,8 +332,8 @@ export default function ChallengesPage() {
           {filteredChallenges.length === 0 ? (
             <div className="text-center py-16 bg-[#1d2226] border border-[#38434f] rounded-2xl">
               <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-white text-sm font-bold">No active challenges found.</p>
-              <p className="text-xs text-slate-500 mt-1">Check back later or post one yourself.</p>
+              <p className="text-white text-sm font-bold">{viewFilter === "mine" ? "You haven't posted any challenges yet." : "No active challenges found."}</p>
+              <p className="text-xs text-slate-500 mt-1">{viewFilter === "mine" ? "Post your first challenge to get started." : "Check back later or post one yourself."}</p>
             </div>
           ) : (
             filteredChallenges.map(challenge => {
