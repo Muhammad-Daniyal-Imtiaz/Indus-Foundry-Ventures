@@ -1,21 +1,29 @@
-import { drizzle } from 'drizzle-orm/libsql/web';
-import { createClient } from '@libsql/client/web';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/libsql/web";
+import { createClient } from "@libsql/client/web";
+import * as schema from "./schema";
 
-const dbUrl = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+let _db: ReturnType<typeof drizzle> | null = null;
 
-if (!dbUrl) {
-  throw new Error("TURSO_DATABASE_URL is not set");
+export function getDb() {
+  if (!_db) {
+    _db = drizzle(
+      createClient({
+        url: process.env.TURSO_DATABASE_URL!,
+        authToken: process.env.TURSO_AUTH_TOKEN!,
+      }),
+      { schema }
+    );
+  }
+  return _db;
 }
 
-if (!authToken) {
-  throw new Error("TURSO_AUTH_TOKEN is not set");
-}
+const throwIfMissing = () => {
+  throw new Error(
+    "Database not initialized. Call getDb() first, or ensure TURSO_DATABASE_URL and TURSO_AUTH_TOKEN env vars are set."
+  );
+};
 
-const client = createClient({
-  url: dbUrl,
-  authToken,
-});
-
-export const db = drizzle(client, { schema });
+export const db = new Proxy(
+  {} as ReturnType<typeof drizzle>,
+  { get: (_, prop) => (getDb() as any)[prop] ?? throwIfMissing }
+);
