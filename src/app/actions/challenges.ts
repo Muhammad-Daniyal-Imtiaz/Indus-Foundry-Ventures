@@ -1,7 +1,7 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { challenges, companyPages, users, challengeTeams, challengeSubmissions } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
