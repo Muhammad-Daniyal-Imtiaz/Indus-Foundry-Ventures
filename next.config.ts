@@ -1,25 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Required for Cloudflare Pages via OpenNext
-  output: "standalone",
-  images: {
-    unoptimized: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Fix for @libsql/isomorphic-ws not resolving properly for Cloudflare
+      config.resolve.conditionNames = ["workerd", "worker", ...(config.resolve.conditionNames || [])];
+      config.resolve.alias["@libsql/isomorphic-ws"] = require.resolve("@libsql/isomorphic-ws/web.mjs");
+    }
+    return config;
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "4mb",
     },
   },
-  // Tell Next.js NOT to bundle @libsql packages — they must stay as runtime imports
-  // This works for both Node.js (dev) and edge/workerd (Cloudflare) targets
-  serverExternalPackages: ["@libsql/client", "@libsql/client/web"],
 };
 
 export default nextConfig;
