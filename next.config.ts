@@ -15,10 +15,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    // Exclude libsql client from edge bundling
-    externalPackages: ["@libsql/client"],
+  },
+  // Mark @libsql/client as external so it isn’t bundled for the edge worker
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Preserve any existing externals and add libsql client
+      config.externals = [...(config.externals ?? []), "@libsql/client"];
+    }
+    return config;
   },
 };
 
 export default nextConfig;
-
