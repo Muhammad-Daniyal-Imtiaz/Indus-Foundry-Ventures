@@ -1,7 +1,5 @@
-// @ts-nocheck
-export default {
-  experimental: {
-    verbose: true,
-  },
-  externals: ['libsql/client'],
-}
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+
+const result = defineCloudflareConfig({});
+
+export default result;
