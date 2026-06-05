@@ -15,12 +15,20 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    serverExternalPackages: [
-      "openid-client",
-      "@panva/oauth4webapi",
-      "jose",
-    ],
   },
+  // Keep the entire @libsql family + auth packages out of the edge bundle.
+  // These packages ship Node-only or workerd-incompatible native files.
+  serverExternalPackages: [
+    "@libsql/client",
+    "@libsql/hrana-client",
+    "@libsql/isomorphic-ws",
+    "@libsql/isomorphic-fetch",
+    "libsql",
+    "openid-client",
+    "@panva/oauth4webapi",
+    "jose",
+  ],
 };
 
 export default nextConfig;
+
