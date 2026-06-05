@@ -10,9 +10,10 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
-      // Explicitly provide Google's stable OAuth endpoints to bypass OIDC
-      // discovery (openid-client uses https.request which is not available
-      // in the Cloudflare Workers / unenv runtime).
+      // Set wellKnown to null to skip OIDC discovery via openid-client.
+      // openid-client uses Node.js http/https which are not fully available
+      // in Cloudflare Workers even with nodejs_compat.
+      wellKnown: null as unknown as undefined,
       authorization: {
         url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
