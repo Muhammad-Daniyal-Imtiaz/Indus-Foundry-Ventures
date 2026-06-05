@@ -10,16 +10,21 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
+      // Explicitly provide Google's stable OAuth endpoints to bypass OIDC
+      // discovery (openid-client uses https.request which is not available
+      // in the Cloudflare Workers / unenv runtime).
       authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
       },
-      httpOptions: {
-        timeout: 30000, // 30 seconds instead of 3.5 seconds
-      },
+      token: "https://oauth2.googleapis.com/token",
+      userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+      idToken: true,
     }),
     CredentialsProvider({
       name: "Credentials",
