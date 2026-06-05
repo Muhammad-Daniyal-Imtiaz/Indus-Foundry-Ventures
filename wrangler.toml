@@ -5,4 +5,3 @@ pages_build_output_dir = ".open-next"
 
 [vars]
 # Production environment variables (DO NOT store secrets here — use `wrangler secret put`)
-NEXTAUTH_URL = "https://indus-foundry-ventures.pages.dev"
