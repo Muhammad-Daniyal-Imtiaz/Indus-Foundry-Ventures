@@ -24,7 +24,6 @@ export const authOptions: NextAuthOptions = {
       },
       token: "https://oauth2.googleapis.com/token",
       userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
-      idToken: true,
     }),
     CredentialsProvider({
       name: "Credentials",
