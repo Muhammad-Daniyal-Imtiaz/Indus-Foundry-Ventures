@@ -33,7 +33,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('connectin-theme');if(t&&['emerald','bright','navy'].includes(t))document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('connectin-theme');if(t&&['grey','blue','mirror'].includes(t))document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
           }}
         />
       </head>

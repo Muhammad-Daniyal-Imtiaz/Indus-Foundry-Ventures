@@ -1,110 +1,110 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ConnectIn — 3 Premium Themes
-   Pakistan Flag Green (#00a86b) as the brand anchor
+   ConnectIn — 3 Eye-Friendly Themes
+   Soft tones, low contrast, easy on eyes
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Theme 1: Emerald Dark (default) ──────────────────────────────────────── */
-[data-theme="emerald"] {
-  --bg-primary: #050a0e;
-  --bg-secondary: #0c1219;
-  --bg-card: #0f1923;
-  --bg-card-hover: #142029;
-  --bg-elevated: #1a2735;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-primary: #00a86b;
-  --accent-secondary: #10b981;
-  --accent-glow: rgba(0, 168, 107, 0.12);
-  --accent-glow-strong: rgba(0, 168, 107, 0.25);
+/* ── Theme 1: Grey (Warm Charcoal) ─────────────────────────────────────────── */
+[data-theme="grey"] {
+  --bg-primary: #18181b;
+  --bg-secondary: #1f1f23;
+  --bg-card: #27272a;
+  --bg-card-hover: #2e2e33;
+  --bg-elevated: #35353a;
+  --text-primary: #d4d4d8;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent-primary: #22c55e;
+  --accent-secondary: #16a34a;
+  --accent-glow: rgba(34, 197, 94, 0.08);
+  --accent-glow-strong: rgba(34, 197, 94, 0.15);
   --border-primary: rgba(255, 255, 255, 0.06);
-  --border-accent: rgba(0, 168, 107, 0.2);
-  --border-hover: rgba(0, 168, 107, 0.35);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-card-hover: 0 8px 32px rgba(0, 168, 107, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3);
-  --hero-gradient: linear-gradient(135deg, #050a0e 0%, #0c1219 40%, #0f1923 100%);
-  --header-bg: rgba(5, 10, 14, 0.85);
-  --scrollbar-track: #0c1219;
-  --scrollbar-thumb: #1e293b;
-  --scrollbar-hover: #334155;
-  --input-bg: #0c1219;
-  --badge-bg: rgba(0, 168, 107, 0.1);
-  --badge-text: #34d399;
-  --badge-border: rgba(0, 168, 107, 0.2);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
-}
-
-/* ── Theme 2: Bright (Clean White + Green) ────────────────────────────────── */
-[data-theme="bright"] {
-  --bg-primary: #f8fafb;
-  --bg-secondary: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f3;
-  --bg-elevated: #f0fdf4;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --accent-primary: #00875a;
-  --accent-secondary: #00a86b;
-  --accent-glow: rgba(0, 168, 107, 0.08);
-  --accent-glow-strong: rgba(0, 168, 107, 0.15);
-  --border-primary: rgba(0, 0, 0, 0.08);
-  --border-accent: rgba(0, 135, 90, 0.2);
-  --border-hover: rgba(0, 135, 90, 0.4);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(0, 135, 90, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --hero-gradient: linear-gradient(135deg, #f0fdf4 0%, #f8fafb 40%, #ffffff 100%);
-  --header-bg: rgba(255, 255, 255, 0.9);
-  --scrollbar-track: #f1f5f9;
-  --scrollbar-thumb: #cbd5e1;
-  --scrollbar-hover: #94a3b8;
-  --input-bg: #f1f5f9;
-  --badge-bg: rgba(0, 168, 107, 0.08);
-  --badge-text: #00875a;
-  --badge-border: rgba(0, 168, 107, 0.15);
-  --success: #00a86b;
-  --warning: #d97706;
-  --error: #dc2626;
-  --info: #2563eb;
-}
-
-/* ── Theme 3: Navy (Deep Blue + Slate + White) ────────────────────────────── */
-[data-theme="navy"] {
-  --bg-primary: #0a0f1a;
-  --bg-secondary: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #253347;
-  --bg-elevated: #334155;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-primary: #38bdf8;
-  --accent-secondary: #0ea5e9;
-  --accent-glow: rgba(56, 189, 248, 0.1);
-  --accent-glow-strong: rgba(56, 189, 248, 0.2);
-  --border-primary: rgba(255, 255, 255, 0.06);
-  --border-accent: rgba(56, 189, 248, 0.2);
-  --border-hover: rgba(56, 189, 248, 0.35);
+  --border-accent: rgba(34, 197, 94, 0.15);
+  --border-hover: rgba(34, 197, 94, 0.25);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 8px 32px rgba(56, 189, 248, 0.06), 0 2px 8px rgba(0, 0, 0, 0.3);
-  --hero-gradient: linear-gradient(135deg, #0a0f1a 0%, #0f172a 40%, #1e293b 100%);
-  --header-bg: rgba(10, 15, 26, 0.88);
-  --scrollbar-track: #0f172a;
-  --scrollbar-thumb: #334155;
-  --scrollbar-hover: #475569;
-  --input-bg: #0f172a;
-  --badge-bg: rgba(56, 189, 248, 0.1);
-  --badge-text: #7dd3fc;
-  --badge-border: rgba(56, 189, 248, 0.2);
-  --success: #10b981;
-  --warning: #f59e0b;
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(34, 197, 94, 0.04);
+  --hero-gradient: linear-gradient(135deg, #18181b 0%, #1f1f23 40%, #27272a 100%);
+  --header-bg: rgba(24, 24, 27, 0.88);
+  --scrollbar-track: #1f1f23;
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-hover: #52525b;
+  --input-bg: #1f1f23;
+  --badge-bg: rgba(34, 197, 94, 0.08);
+  --badge-text: #4ade80;
+  --badge-border: rgba(34, 197, 94, 0.15);
+  --success: #22c55e;
+  --warning: #eab308;
   --error: #ef4444;
-  --info: #38bdf8;
+  --info: #6366f1;
+}
+
+/* ── Theme 2: Blue (Twilight Cool) ─────────────────────────────────────────── */
+[data-theme="blue"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #131c31;
+  --bg-card: #1a2540;
+  --bg-card-hover: #1f2d4d;
+  --bg-elevated: #253759;
+  --text-primary: #cbd5e1;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-primary: #60a5fa;
+  --accent-secondary: #3b82f6;
+  --accent-glow: rgba(96, 165, 250, 0.08);
+  --accent-glow-strong: rgba(96, 165, 250, 0.15);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(96, 165, 250, 0.15);
+  --border-hover: rgba(96, 165, 250, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(96, 165, 250, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #0f172a 0%, #131c31 40%, #1a2540 100%);
+  --header-bg: rgba(15, 23, 42, 0.88);
+  --scrollbar-track: #131c31;
+  --scrollbar-thumb: #1e3a5f;
+  --scrollbar-hover: #2563eb;
+  --input-bg: #131c31;
+  --badge-bg: rgba(96, 165, 250, 0.08);
+  --badge-text: #93c5fd;
+  --badge-border: rgba(96, 165, 250, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+}
+
+/* ── Theme 3: Mirror Black (Chrome & Charcoal) ─────────────────────────────── */
+[data-theme="mirror"] {
+  --bg-primary: #09090b;
+  --bg-secondary: #111114;
+  --bg-card: #18181b;
+  --bg-card-hover: #1f1f23;
+  --bg-elevated: #27272a;
+  --text-primary: #d4d4d8;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent-primary: #a1a1aa;
+  --accent-secondary: #d4d4d8;
+  --accent-glow: rgba(161, 161, 170, 0.06);
+  --accent-glow-strong: rgba(161, 161, 170, 0.12);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(161, 161, 170, 0.12);
+  --border-hover: rgba(161, 161, 170, 0.2);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(161, 161, 170, 0.04);
+  --hero-gradient: linear-gradient(135deg, #09090b 0%, #111114 40%, #18181b 100%);
+  --header-bg: rgba(9, 9, 11, 0.9);
+  --scrollbar-track: #111114;
+  --scrollbar-thumb: #27272a;
+  --scrollbar-hover: #3f3f46;
+  --input-bg: #111114;
+  --badge-bg: rgba(161, 161, 170, 0.06);
+  --badge-text: #d4d4d8;
+  --badge-border: rgba(161, 161, 170, 0.12);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
@@ -259,19 +259,19 @@ body {
 
 /* ── Gradient text ─────────────────────────────────────────────────────────── */
 .text-gradient-emerald {
-  background: linear-gradient(135deg, #34d399 0%, #00a86b 50%, #008757 100%);
+  background: linear-gradient(135deg, #86efac 0%, #22c55e 50%, #16a34a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-navy {
-  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%);
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%);
+  background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

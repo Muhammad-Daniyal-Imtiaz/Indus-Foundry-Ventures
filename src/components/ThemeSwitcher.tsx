@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "@/context/ThemeContext";
-import { Palette, Sun, Moon, Waves, ChevronDown } from "lucide-react";
+import { Palette, Moon, Waves, Sun, ChevronDown } from "lucide-react";
 
 const THEMES = [
-  { id: "emerald" as const, label: "Emerald Dark", icon: Moon, color: "#00a86b" },
-  { id: "bright" as const, label: "Bright", icon: Sun, color: "#00875a" },
-  { id: "navy" as const, label: "Navy", icon: Waves, color: "#38bdf8" },
+  { id: "grey" as const, label: "Grey", icon: Moon, color: "#a1a1aa" },
+  { id: "blue" as const, label: "Blue", icon: Waves, color: "#60a5fa" },
+  { id: "mirror" as const, label: "Mirror Black", icon: Sun, color: "#d4d4d8" },
 ];
 
 export default function ThemeSwitcher() {

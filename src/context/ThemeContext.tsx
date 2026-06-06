@@ -1,31 +1,31 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type Theme = "emerald" | "bright" | "navy";
+type Theme = "grey" | "blue" | "mirror";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (t: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: "emerald", setTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: "grey", setTheme: () => {} });
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("emerald");
+  const [theme, setThemeState] = useState<Theme>("grey");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem("connectin-theme") as Theme | null;
-    if (saved && ["emerald", "bright", "navy"].includes(saved)) {
+    if (saved && ["grey", "blue", "mirror"].includes(saved)) {
       setThemeState(saved);
       document.documentElement.setAttribute("data-theme", saved);
     } else {
-      document.documentElement.setAttribute("data-theme", "emerald");
+      document.documentElement.setAttribute("data-theme", "grey");
     }
   }, []);
 
