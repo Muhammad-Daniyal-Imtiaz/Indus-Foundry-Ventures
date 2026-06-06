@@ -3,7 +3,9 @@ import { searchJobs, rebuildSearchIndex } from "@/lib/search";
 import { generateSearchKey, getCachedResult, setCachedResult } from "@/lib/cache";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-export const runtime = "edge";
+// NOTE: Do NOT use edge runtime here — this route uses Node.js APIs (Turso DB, KV cache)
+// OpenNext requires edge routes to be in a separate function config.
+// Runs in the default Node.js / Cloudflare Workers (Node compat) runtime.
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
