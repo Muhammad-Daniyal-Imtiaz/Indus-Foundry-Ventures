@@ -5,3 +5,10 @@ pages_build_output_dir = ".open-next"
 
 [vars]
 # Production environment variables (DO NOT store secrets here — use `wrangler secret put`)
+
+# KV namespace for search cache — create via:
+#   wrangler kv:namespace create "SEARCH_CACHE"
+# Then uncomment and set the id below:
+# [[kv_namespaces]]
+# binding = "SEARCH_CACHE"
+# id = "your-kv-namespace-id-here"

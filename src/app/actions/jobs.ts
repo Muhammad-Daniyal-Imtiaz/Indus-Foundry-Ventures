@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { jobPostings, jobApplications, users, companyPages } from "@/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { syncJobToFts, removeJobFromFts } from "@/db/search-schema";
+import { invalidateSearchCache } from "@/lib/cache";
 
 export async function createJobPosting(formData: FormData) {
   try {
@@ -84,6 +86,17 @@ export async function createJobPosting(formData: FormData) {
     };
 
     await db.insert(jobPostings).values(job);
+
+    try {
+      const rowResult = await db.all(sql`SELECT rowid FROM job_postings WHERE id = ${id} LIMIT 1`) as any[];
+      if (rowResult.length) {
+        await syncJobToFts(db, rowResult[0].rowid, title, description, location, companyName, JSON.stringify(skills));
+      }
+      await invalidateSearchCache();
+    } catch {
+      // FTS sync or cache invalidation failure is non-fatal
+    }
+
     return {
       success: true,
       job: { ...job, skills, requirements, benefits },
@@ -258,8 +271,18 @@ export async function deleteJobPosting(jobId: string) {
       return { success: false, error: "Unauthorized. Only the company owner can delete this job." };
     }
 
+    const rowResult = await db.all(sql`SELECT rowid FROM job_postings WHERE id = ${jobId} LIMIT 1`) as any[];
     await db.delete(jobApplications).where(eq(jobApplications.jobId, jobId));
     await db.delete(jobPostings).where(eq(jobPostings.id, jobId));
+
+    try {
+      if (rowResult.length) {
+        await removeJobFromFts(db, rowResult[0].rowid);
+      }
+      await invalidateSearchCache();
+    } catch {
+      // FTS sync or cache invalidation failure is non-fatal
+    }
 
     return { success: true };
   } catch (err: any) {
@@ -331,6 +354,17 @@ export async function updateJobPosting(jobId: string, formData: FormData) {
     };
 
     await db.update(jobPostings).set(jobUpdate).where(eq(jobPostings.id, jobId));
+
+    try {
+      const rowResult = await db.all(sql`SELECT rowid FROM job_postings WHERE id = ${jobId} LIMIT 1`) as any[];
+      if (rowResult.length) {
+        await syncJobToFts(db, rowResult[0].rowid, title, description, location, existingJob.companyName, JSON.stringify(skills));
+      }
+      await invalidateSearchCache();
+    } catch {
+      // FTS sync or cache invalidation failure is non-fatal
+    }
+
     return {
       success: true,
       job: { ...existingJob, ...jobUpdate, skills, requirements, benefits },
