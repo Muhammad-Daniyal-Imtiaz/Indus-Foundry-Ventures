@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchJobs, rebuildSearchIndex } from "@/lib/search";
-import { generateSearchKey, getCachedResult, setCachedResult } from "@/lib/cache";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-// NOTE: Do NOT use edge runtime here — this route uses Node.js APIs (Turso DB, KV cache)
-// OpenNext requires edge routes to be in a separate function config.
-// Runs in the default Node.js / Cloudflare Workers (Node compat) runtime.
-
-function getClientIp(request: NextRequest): string {
-  return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
-}
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
   const { searchParams } = new URL(request.url);
 
   try {
-    const clientIp = getClientIp(request);
+    const clientIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
     const rateCheck = checkRateLimit(`search:${clientIp}`);
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -38,33 +29,8 @@ export async function GET(request: NextRequest) {
 
     if (!q) {
       return NextResponse.json({
-        success: true,
-        jobs: [],
-        nextCursor: null,
+        success: true, jobs: [], nextCursor: null,
         meta: { tookMs: Date.now() - start, cacheHit: false, matchCount: 0 },
-      });
-    }
-
-    const cacheKey = await generateSearchKey({
-      query: q,
-      cursor,
-      filters: {
-        industry: searchParams.get("industry") || "",
-        experienceLevel: searchParams.get("experienceLevel") || "",
-        employmentType: searchParams.get("employmentType") || "",
-        locationType: searchParams.get("locationType") || "",
-        salaryMin: searchParams.get("salaryMin") || "",
-        salaryMax: searchParams.get("salaryMax") || "",
-      },
-    });
-
-    const cached = await getCachedResult(cacheKey);
-    if (cached) {
-      return NextResponse.json({
-        success: true,
-        jobs: cached.jobs,
-        nextCursor: cached.cursor || null,
-        meta: { tookMs: Date.now() - start, cacheHit: true, matchCount: cached.jobs.length },
       });
     }
 
@@ -81,32 +47,16 @@ export async function GET(request: NextRequest) {
       pageSize,
     });
 
-    await setCachedResult(cacheKey, {
-      jobs: result.jobs,
-      total: result.totalEstimate,
-      cursor: result.nextCursor || undefined,
-    }, 600);
-
     return NextResponse.json({
       success: true,
       jobs: result.jobs,
       nextCursor: result.nextCursor,
       totalEstimate: result.totalEstimate,
-      meta: {
-        tookMs: Date.now() - start,
-        cacheHit: result.meta?.cacheHit || false,
-        matchCount: result.jobs.length,
-      },
+      meta: { tookMs: Date.now() - start, cacheHit: false, matchCount: result.jobs.length },
     });
   } catch (err: any) {
     console.error("Job search error:", err);
-
-    try {
-      await rebuildSearchIndex();
-    } catch {
-      // index rebuild failed silently
-    }
-
+    try { await rebuildSearchIndex(); } catch { }
     return NextResponse.json(
       { success: false, jobs: [], nextCursor: null, error: err.message || "Search failed" },
       { status: 500 }

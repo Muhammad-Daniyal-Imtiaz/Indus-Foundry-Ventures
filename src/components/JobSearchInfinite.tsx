@@ -102,7 +102,8 @@ export default function JobSearchInfinite() {
     if (pageCursor) params.set("cursor", pageCursor);
 
     try {
-      const res = await fetch(`/api/jobs/search?${params}`);
+      const api = process.env.NEXT_PUBLIC_SEARCH_WORKER_URL || "/api/jobs/search";
+      const res = await fetch(`${api}?${params}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       if (append) {

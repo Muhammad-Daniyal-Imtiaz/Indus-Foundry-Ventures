@@ -1,0 +1,13 @@
+name = "connectin"
+main = "src/index.ts"
+compatibility_date = "2026-06-06"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for search cache
+[[kv_namespaces]]
+binding = "SEARCH_CACHE"
+id = "e02802bd694540a4b2e5fe5ff06ae888"
+
+# Environment variables (set secrets separately via `wrangler secret put`)
+[vars]
+PAGES_URL = "https://indus-foundry-ventures.pages.dev"
