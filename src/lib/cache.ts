@@ -1,10 +1,12 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+/**
+ * Edge-cached search results via Cloudflare KV (SEARCH_CACHE binding).
+ * Gracefully degrades to no-cache when running outside Cloudflare (local dev).
+ */
 
 export interface SearchResult {
   jobs: any[];
   total: number;
   cursor?: string;
-  facets?: Record<string, Record<string, number>>;
 }
 
 export interface SearchParams {
@@ -14,54 +16,64 @@ export interface SearchParams {
   [key: string]: unknown;
 }
 
-async function hash(input: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").substring(0, 32);
+// ── helpers ─────────────────────────────────────────────────────────────────
+
+async function sha256(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 32);
 }
 
-function normalizedParams(params: SearchParams): string {
-  const sorted: Record<string, unknown> = {};
+function normalise(params: SearchParams): string {
+  const out: Record<string, unknown> = {};
   for (const key of Object.keys(params).sort()) {
-    const val = params[key];
-    if (typeof val === "string") {
-      sorted[key] = val.toLowerCase();
-    } else if (val && typeof val === "object" && !Array.isArray(val)) {
-      const lower: Record<string, string> = {};
-      for (const k of Object.keys(val as Record<string, string>).sort()) {
-        lower[k] = (val as Record<string, string>)[k].toLowerCase();
+    const v = params[key];
+    if (typeof v === "string") {
+      out[key] = v.toLowerCase();
+    } else if (v && typeof v === "object" && !Array.isArray(v)) {
+      const inner: Record<string, string> = {};
+      for (const k of Object.keys(v as Record<string, string>).sort()) {
+        inner[k] = (v as Record<string, string>)[k]?.toLowerCase() ?? "";
       }
-      sorted[key] = lower;
+      out[key] = inner;
     } else {
-      sorted[key] = val;
+      out[key] = v;
     }
   }
-  return JSON.stringify(sorted);
+  return JSON.stringify(out);
 }
 
-export function getCacheKey(params: {
-  query: string;
-  filters?: Record<string, string>;
-  cursor?: string;
-}): string {
-  const query = params.query.toLowerCase();
-  const filters = params.filters ? JSON.stringify(Object.keys(params.filters).sort().reduce((acc: Record<string, string>, k: string) => {
-    acc[k] = params.filters![k];
-    return acc;
-  }, {})) : "{}";
-  const cursor = params.cursor || "first";
-  return `search:jobs:v1:${query}:${filters}:${cursor}`;
+// ── KV accessor — safe in Node.js & workerd ─────────────────────────────────
+
+function getKV(): KVNamespace | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getCloudflareContext } = require("@opennextjs/cloudflare");
+    const ctx = getCloudflareContext();
+    return ctx?.env?.SEARCH_CACHE ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── public API ───────────────────────────────────────────────────────────────
+
+export async function generateSearchKey(params: SearchParams): Promise<string> {
+  const version = await getCacheVersion();
+  const h = await sha256(normalise(params));
+  return `search:jobs:v${version}:${h}`;
 }
 
 export async function getCachedResult(key: string): Promise<SearchResult | null> {
   try {
-    const ctx = getCloudflareContext();
-    if (!ctx.env?.SEARCH_CACHE) return null;
-    const cached = await ctx.env.SEARCH_CACHE.get(key);
-    if (!cached) return null;
-    return JSON.parse(cached) as SearchResult;
+    const kv = getKV();
+    if (!kv) return null;
+    const raw = await kv.get(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as SearchResult;
   } catch {
     return null;
   }
@@ -69,48 +81,32 @@ export async function getCachedResult(key: string): Promise<SearchResult | null>
 
 export async function setCachedResult(key: string, result: SearchResult, ttl = 600): Promise<void> {
   try {
-    const ctx = getCloudflareContext();
-    if (!ctx.env?.SEARCH_CACHE) return;
-    await ctx.env.SEARCH_CACHE.put(key, JSON.stringify(result), { expirationTtl: ttl });
+    const kv = getKV();
+    if (!kv) return;
+    await kv.put(key, JSON.stringify(result), { expirationTtl: ttl });
   } catch {
-    // silently fail outside Cloudflare env
+    // non-fatal
   }
 }
 
-export async function invalidateSearchCache(jobId?: string): Promise<void> {
+export async function invalidateSearchCache(): Promise<void> {
   try {
-    const ctx = getCloudflareContext();
-    if (!ctx.env?.SEARCH_CACHE) return;
-    if (jobId) {
-      let cursor: string | undefined;
-      do {
-        const listed = await ctx.env.SEARCH_CACHE.list({ prefix: "search:jobs:v1:*", cursor });
-        for (const key of listed.keys) {
-          await ctx.env.SEARCH_CACHE.delete(key.name);
-        }
-        cursor = listed.list_complete ? undefined : listed.cursor;
-      } while (cursor);
-    }
-    const version = await getCacheVersion();
-    await ctx.env.SEARCH_CACHE.put("search:jobs:cache_version", String(version + 1));
+    const kv = getKV();
+    if (!kv) return;
+    const cur = await getCacheVersion();
+    await kv.put("search:jobs:cache_version", String(cur + 1), { expirationTtl: 86400 * 30 });
   } catch {
-    // silently fail outside Cloudflare env
+    // non-fatal
   }
 }
 
 export async function getCacheVersion(): Promise<number> {
   try {
-    const ctx = getCloudflareContext();
-    if (!ctx.env?.SEARCH_CACHE) return 0;
-    const version = await ctx.env.SEARCH_CACHE.get("search:jobs:cache_version");
-    return version ? parseInt(version, 10) : 0;
+    const kv = getKV();
+    if (!kv) return 0;
+    const v = await kv.get("search:jobs:cache_version");
+    return v ? parseInt(v, 10) : 0;
   } catch {
     return 0;
   }
-}
-
-export async function generateSearchKey(params: SearchParams): Promise<string> {
-  const version = await getCacheVersion();
-  const hashVal = await hash(normalizedParams(params));
-  return `search:jobs:v${version}:${hashVal}`;
 }

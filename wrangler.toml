@@ -4,11 +4,16 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".open-next"
 
 [vars]
-# Production environment variables (DO NOT store secrets here — use `wrangler secret put`)
+# Non-secret runtime config (secrets go in Cloudflare Pages dashboard → Settings → Environment Variables)
 
-# KV namespace for search cache — create via:
-#   wrangler kv:namespace create "SEARCH_CACHE"
-# Then uncomment and set the id below:
-# [[kv_namespaces]]
-# binding = "SEARCH_CACHE"
-# id = "your-kv-namespace-id-here"
+# ── KV namespace for job search cache ────────────────────────────────────────
+# Your SEARCH_CACHE KV namespace is already created.
+# 1. Go to Cloudflare dashboard → Workers & Pages → KV
+# 2. Find "SEARCH_CACHE" and copy its Namespace ID
+# 3. Paste the ID below and uncomment the block
+# 4. Also bind it in Cloudflare Pages: Settings → Functions → KV namespace bindings
+#    binding = SEARCH_CACHE, namespace = <your namespace>
+
+[[kv_namespaces]]
+binding = "SEARCH_CACHE"
+id = "e02802bd694540a4b2e5fe5ff06ae888"
