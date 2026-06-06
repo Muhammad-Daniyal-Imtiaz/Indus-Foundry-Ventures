@@ -4,17 +4,18 @@ import "./globals.css";
 import Header from "./Header";
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
+import ClientProviders from "@/components/ClientProviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap", // Use fallback until font loads
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-  display: "swap", // Use fallback until font loads
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,18 +29,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <NextAuthProvider>
-      <html lang="en" className="scroll-smooth">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
-        >
-          <OnboardingOverlay />
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-        </body>
-      </html>
-    </NextAuthProvider>
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('connectin-theme');if(t&&['emerald','bright','navy'].includes(t))document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+          }}
+        />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+      >
+        <ClientProviders>
+          <NextAuthProvider>
+            <OnboardingOverlay />
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+          </NextAuthProvider>
+        </ClientProviders>
+      </body>
+    </html>
   );
 }

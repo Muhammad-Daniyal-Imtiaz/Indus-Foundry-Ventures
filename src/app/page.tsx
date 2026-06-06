@@ -64,7 +64,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] overflow-hidden bg-grid-pattern">
+    <div className="relative min-h-screen overflow-hidden bg-grid-pattern" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
       {/* Patriotic Tech Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/8 blur-[140px] pointer-events-none animate-pulse-glow"></div>
       <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/6 blur-[140px] pointer-events-none"></div>
@@ -77,7 +77,7 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/20 shadow-lg shadow-emerald-500/5"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full badge"
           >
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -92,7 +92,8 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-white mb-6"
+            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6"
+            style={{ color: "var(--text-primary)" }}
           >
             Forging Pakistan's <br />
             <span className="text-gradient-emerald">Startup & Jobs Ecosystem.</span>
@@ -102,7 +103,8 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-slate-400 text-sm sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-sm sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
           >
             Pakistan produces <span className="text-emerald-400 font-semibold underline decoration-emerald-500/30 underline-offset-4">500,000+ graduates yearly</span> — but too many remain unemployed because talent, opportunity, and capital never meet. We fix that.
           </motion.p>
@@ -116,7 +118,7 @@ export default function Home() {
           >
             <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500/40"></div>
-              <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1">New Graduates This Year</p>
+              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>New Graduates This Year</p>
               <div className="text-2xl sm:text-3xl font-extrabold text-red-400 font-mono tracking-tight flex items-center justify-center gap-1.5">
                 {graduatesCount.toLocaleString()}
                 <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-normal animate-pulse">+1</span>
@@ -125,7 +127,7 @@ export default function Home() {
 
             <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-500/40"></div>
-              <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1">Matches Forged</p>
+              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Matches Forged</p>
               <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">
                 {matchesCount.toLocaleString()}
               </div>
@@ -133,7 +135,7 @@ export default function Home() {
 
             <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-500/40"></div>
-              <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1">Venture Capital Bridged</p>
+              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Venture Capital Bridged</p>
               <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 font-mono tracking-tight">
                 PKR {(fundingBridged / 1000000).toFixed(1)}M
               </div>
@@ -149,14 +151,14 @@ export default function Home() {
           >
             <Link 
               href="/teams" 
-              className="bg-emerald-500 text-slate-950 font-extrabold px-8 py-3.5 rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 text-sm tracking-wide flex items-center gap-2"
+              className="btn-primary font-extrabold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
             >
               Explore Active Modules
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a 
               href="#onboarding-wizard" 
-              className="bg-slate-900 border border-white/10 hover:border-white/20 text-white font-bold px-8 py-3.5 rounded-xl transition-all text-sm tracking-wide flex items-center gap-2"
+              className="btn-secondary font-bold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
             >
               Find Your Pathway
               <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -166,16 +168,16 @@ export default function Home() {
       </section>
 
       {/* Live Activity Marquee Ticker */}
-      <div className="w-full bg-slate-950/60 border-y border-white/5 py-3 px-6 overflow-hidden mb-20">
+      <div className="w-full border-y py-3 px-6 overflow-hidden mb-20" style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)" }}>
         <div className="max-w-7xl mx-auto flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-1 font-bold text-emerald-400 tracking-wider uppercase whitespace-nowrap">
+          <span className="flex items-center gap-1 font-bold tracking-wider uppercase whitespace-nowrap text-accent">
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
             LIVE ACTIVITY TICKER:
           </span>
-          <div className="flex gap-12 animate-marquee whitespace-nowrap overflow-x-hidden text-slate-400">
+          <div className="flex gap-12 animate-marquee whitespace-nowrap overflow-x-hidden" style={{ color: "var(--text-secondary)" }}>
             {terminalLogs.map((log, idx) => (
-              <span key={idx} className="font-mono text-slate-300 flex items-center gap-2">
-                <span className="text-[10px] text-emerald-500">▶</span>
+              <span key={idx} className="font-mono flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <span className="text-[10px] text-accent">▶</span>
                 {log}
               </span>
             ))}
@@ -190,10 +192,10 @@ export default function Home() {
             <span className="p-1 rounded bg-emerald-500/10"><Cpu className="w-3.5 h-3.5" /></span>
             WHAT WE FORGE
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
             Core Modules
           </h2>
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
             Click on any module to enter its dedicated workspace portal, run simulations, and submit solutions.
           </p>
         </div>
@@ -246,14 +248,14 @@ export default function Home() {
             <Link 
               key={idx}
               href={pillar.href}
-              className="glass-panel p-6 rounded-2xl border border-white/5 hover:bg-[#0b0f19]/80 transition-all flex flex-col justify-between h-[210px] group"
+              className="glass-panel p-6 rounded-2xl border border-white/5 hover:bg-[#0b0f19]/80 transition-all flex flex-col justify-between h-[210px] group card"
             >
               <div>
-                <h4 className="font-extrabold text-base text-white group-hover:text-emerald-400 transition-all">{pillar.label}</h4>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed">{pillar.desc}</p>
+                <h4 className="font-extrabold text-base group-hover:text-emerald-400 transition-all" style={{ color: "var(--text-primary)" }}>{pillar.label}</h4>
+                <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>{pillar.desc}</p>
               </div>
 
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-white transition-all pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between text-xs font-bold transition-all pt-4 border-t" style={{ color: "var(--text-secondary)", borderColor: "var(--border-primary)" }}>
                 <span>{pillar.action}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
               </div>
@@ -263,23 +265,23 @@ export default function Home() {
       </section>
 
       {/* Pathway Wizard (Personalized Onboarding directly on homepage) */}
-      <section id="onboarding-wizard" className="py-16 px-6 max-w-7xl mx-auto border-t border-white/5 mb-20 scroll-mt-20">
+      <section id="onboarding-wizard" className="py-16 px-6 max-w-7xl mx-auto border-t mb-20 scroll-mt-20" style={{ borderColor: "var(--border-primary)" }}>
         <div className="max-w-xl mx-auto text-center mb-12">
           <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 font-mono text-xs font-bold border border-amber-500/20">
             THE STAKEHOLDER PATHWAY MATCH
           </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mt-4">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight mt-4" style={{ color: "var(--text-primary)" }}>
             Interactive Setup Wizard
           </h2>
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
             Tell the engine who you are. We will map a curated pathway and direct you to the correct tools instantly.
           </p>
         </div>
 
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/5 max-w-3xl mx-auto relative overflow-hidden">
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border max-w-3xl mx-auto relative overflow-hidden card" style={{ borderColor: "var(--border-primary)" }}>
           {wizardStep === 1 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h3 className="font-extrabold text-base sm:text-lg text-white mb-6 text-center">Which stakeholder profile best describes you?</h3>
+              <h3 className="font-extrabold text-base sm:text-lg mb-6 text-center" style={{ color: "var(--text-primary)" }}>Which stakeholder profile best describes you?</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { id: 'graduate', title: '🎓 Unemployed Graduate / Job Seeker', desc: 'Looking for remote developer roles, skill-to-placement internships, and active challenge arenas.' },
@@ -293,10 +295,10 @@ export default function Home() {
                       setPathwayProfile(prof.id);
                       setWizardStep(2);
                     }}
-                    className="p-5 rounded-2xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/40 text-left transition-all hover:bg-slate-900 group cursor-pointer"
+                    className="p-5 rounded-2xl border hover:border-emerald-500/40 text-left transition-all group cursor-pointer card"
                   >
-                    <h4 className="font-extrabold text-sm text-white group-hover:text-emerald-400 transition-all">{prof.title}</h4>
-                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{prof.desc}</p>
+                    <h4 className="font-extrabold text-sm group-hover:text-emerald-400 transition-all" style={{ color: "var(--text-primary)" }}>{prof.title}</h4>
+                    <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>{prof.desc}</p>
                   </button>
                 ))}
               </div>
@@ -306,7 +308,7 @@ export default function Home() {
           {wizardStep === 2 && pathwayProfile && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Personalized Platform Route</span>
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Your Personalized Platform Route</span>
                 <button onClick={() => setWizardStep(1)} className="text-xs text-emerald-400 font-bold hover:underline">Back</button>
               </div>
 
@@ -321,8 +323,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">1</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Prove Skills in the Challenge Arena</h4>
-                        <p className="text-xs text-slate-400 mt-1">Submit compiler-validated solutions to active HEC and PITB hardware/software procurement challenges.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Prove Skills in the Challenge Arena</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Submit compiler-validated solutions to active HEC and PITB hardware/software procurement challenges.</p>
                         <Link href="/challenges" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Go to Challenge Arena →</Link>
                       </div>
                     </div>
@@ -330,8 +332,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">2</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Search Active Startup Placements</h4>
-                        <p className="text-xs text-slate-400 mt-1">Browse remote development pipelines with FBR IT remittance exemption support.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Search Active Startup Placements</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Browse remote development pipelines with FBR IT remittance exemption support.</p>
                         <Link href="/jobs" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Go to Jobs →</Link>
                       </div>
                     </div>
@@ -350,8 +352,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">1</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Verify Cofounder Alignment</h4>
-                        <p className="text-xs text-slate-400 mt-1">Run our interactive team viability compiler and align with engineers specialised in RISC-V VLSI, deep networks, or SaaS UI.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Verify Cofounder Alignment</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Run our interactive team viability compiler and align with engineers specialised in RISC-V VLSI, deep networks, or SaaS UI.</p>
                         <Link href="/teams" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Go to Teams Workspace →</Link>
                       </div>
                     </div>
@@ -359,8 +361,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">2</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Secure Venture Backing</h4>
-                        <p className="text-slate-400 text-xs mt-1">Dispatch pre-vetted pitch decks to active early-stage investment committees.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Secure Venture Backing</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Dispatch pre-vetted pitch decks to active early-stage investment committees.</p>
                         <Link href="/funding" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Launch Funding Portal →</Link>
                       </div>
                     </div>
@@ -379,8 +381,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">1</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Explore Qualified Deal Flow</h4>
-                        <p className="text-xs text-slate-400 mt-1">Review active, pre-compliant seed parameters compiled from qualified founders.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Explore Qualified Deal Flow</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Review active, pre-compliant seed parameters compiled from qualified founders.</p>
                         <Link href="/funding" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Go to Funding Workspace →</Link>
                       </div>
                     </div>
@@ -399,8 +401,8 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-500/20 shrink-0">1</div>
                       <div>
-                        <h4 className="font-bold text-white text-xs">Establish Challenge Benchmarks</h4>
-                        <p className="text-xs text-slate-400 mt-1">Establish dedicated procurement challenges in agriculture AI, digital banking APIs, or local layout fabs.</p>
+                        <h4 className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Establish Challenge Benchmarks</h4>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Establish dedicated procurement challenges in agriculture AI, digital banking APIs, or local layout fabs.</p>
                         <Link href="/challenges" className="text-xs font-extrabold text-emerald-400 mt-1 inline-block hover:underline">Go to Challenge Arena →</Link>
                       </div>
                     </div>
@@ -411,7 +413,7 @@ export default function Home() {
               <div className="mt-8 pt-4 border-t border-white/5 flex justify-end">
                 <button 
                   onClick={() => setWizardStep(1)} 
-                  className="bg-slate-900 border border-white/10 hover:border-emerald-500/30 text-white font-bold text-xs py-2 px-5 rounded-lg transition-all"
+                  className="btn-secondary font-bold text-xs py-2 px-5 rounded-lg"
                 >
                   Restart Selection
                 </button>
@@ -422,21 +424,21 @@ export default function Home() {
       </section>
 
       {/* Unified footer */}
-      <footer className="border-t border-white/5 bg-[#03060c] py-12 px-6">
+      <footer className="border-t py-12 px-6" style={{ background: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="md:col-span-2">
-            <span className="font-black text-lg tracking-wider text-white">CONNECTIN</span>
-            <p className="text-xs text-slate-400 mt-3 max-w-sm leading-relaxed">
+            <span className="font-black text-lg tracking-wider" style={{ color: "var(--text-primary)" }}>CONNECTIN</span>
+            <p className="text-xs mt-3 max-w-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Pakistan's premier deep-tech startup, cofounder matching, and job placement engine. Solving the graduation unemployment paradox by bridging builders, venture capital, and local resources.
             </p>
-            <p className="text-[10px] text-slate-500 mt-6">
+            <p className="text-[10px] mt-6" style={{ color: "var(--text-muted)" }}>
               © {new Date().getFullYear()} ConnectIn. All Rights Reserved.
             </p>
           </div>
 
           <div>
-            <h4 className="font-bold text-xs text-white uppercase tracking-wider mb-4">CHANNELS</h4>
-            <ul className="text-xs text-slate-400 space-y-2.5 font-medium">
+            <h4 className="font-bold text-xs uppercase tracking-wider mb-4" style={{ color: "var(--text-primary)" }}>CHANNELS</h4>
+            <ul className="text-xs space-y-2.5 font-medium" style={{ color: "var(--text-secondary)" }}>
               <li><Link href="/teams" className="hover:text-emerald-400 transition-all">👥 Cofounder Matching</Link></li>
               <li><Link href="/funding" className="hover:text-emerald-400 transition-all">💰 Venture Capital Bridge</Link></li>
               <li><Link href="/gov" className="hover:text-emerald-400 transition-all">🏛️ PSF & Gov Access</Link></li>
@@ -446,15 +448,15 @@ export default function Home() {
           </div>
 
           <div>
-            <h4 className="font-bold text-xs text-white uppercase tracking-wider mb-4">CONNECTIVITY</h4>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+            <h4 className="font-bold text-xs uppercase tracking-wider mb-4" style={{ color: "var(--text-primary)" }}>CONNECTIVITY</h4>
+            <p className="text-xs leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
               Access national incubators, local sandbox hubs, or Silicon Valley diaspora angel networks.
             </p>
             <div className="flex gap-2">
-              <span className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-xs text-slate-400 hover:text-white cursor-pointer transition-all font-mono">FB</span>
-              <span className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-xs text-slate-400 hover:text-white cursor-pointer transition-all font-mono">TW</span>
-              <span className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-xs text-slate-400 hover:text-white cursor-pointer transition-all font-mono">LN</span>
-              <span className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-xs text-slate-400 hover:text-white cursor-pointer transition-all font-mono">GH</span>
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-all font-mono btn-secondary">FB</span>
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-all font-mono btn-secondary">TW</span>
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-all font-mono btn-secondary">LN</span>
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-all font-mono btn-secondary">GH</span>
             </div>
           </div>
         </div>
