@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Circuit + trend arrow icon -->
+  <!-- Bar chart segment (right side, tall dark) -->
+  <rect x="220" y="90" width="52" height="135" rx="6" fill="#1a5c3a"/>
+  
+  <!-- Trend arrow line -->
+  <polyline points="80,195 130,145 175,165 250,90" stroke="#2d7a4f" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Arrow head -->
+  <polygon points="250,90 290,68 272,110" fill="#2d7a4f"/>
+  
+  <!-- Circuit node body (hexagon-ish rounded shape) -->
+  <rect x="88" y="148" width="115" height="78" rx="20" fill="#2d7a4f"/>
+  
+  <!-- Circuit node hole left -->
+  <circle cx="108" cy="175" r="13" fill="white"/>
+  <!-- Circuit node hole right -->
+  <circle cx="183" cy="205" r="13" fill="white"/>
+  
+  <!-- Inner organic blob -->
+  <ellipse cx="148" cy="188" rx="28" ry="22" fill="#1a5c3a"/>
+  
+  <!-- Connector lines -->
+  <line x1="88" y1="175" x2="68" y2="175" stroke="#2d7a4f" stroke-width="10" stroke-linecap="round"/>
+  <line x1="203" y1="205" x2="225" y2="205" stroke="#2d7a4f" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Wordmark: ConnectIn -->
+  <text x="200" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="58" font-weight="600" fill="#1a5c3a" text-anchor="middle" letter-spacing="-1">ConnectIn</text>
+</svg>

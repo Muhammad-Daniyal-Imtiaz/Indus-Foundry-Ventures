@@ -92,17 +92,13 @@ export default function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-all overflow-hidden">
-            <img src="/logo.png" alt="ConnectIn" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display='none'; (e.currentTarget.parentElement as HTMLElement).innerHTML='<span class="text-lg font-black">C</span>'; }} />
-          </div>
-          <div>
-            <span className="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
-              ConnectIn
-            </span>
-            <p className="text-[9px] text-slate-400 font-bold tracking-wider uppercase">Pakistan's Startup & Jobs Engine</p>
-          </div>
+        {/* Logo — ConnectIn brand mark, like LinkedIn's header logo */}
+        <Link href="/" className="flex items-center group shrink-0">
+          <img
+            src="/connectin-logo.svg"
+            alt="ConnectIn"
+            className="h-9 w-auto group-hover:opacity-90 transition-opacity"
+          />
         </Link>
 
         {/* Desktop Navigation */}
