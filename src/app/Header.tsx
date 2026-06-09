@@ -88,13 +88,13 @@ export default function Header() {
     <header 
       className={`sticky top-0 z-50 w-full transition-all duration-300 glass`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo — ConnectIn brand mark, like LinkedIn's header logo */}
-        <Link href="/" className="flex items-center group shrink-0">
+        <Link href="/" className="flex items-center group shrink-0 h-16">
           <img
             src="/connect-in.jpeg"
             alt="ConnectIn"
-            className="h-9 w-auto group-hover:opacity-90 transition-opacity"
+            className="h-full w-auto object-contain group-hover:scale-105 transition-all duration-300"
           />
         </Link>
 
