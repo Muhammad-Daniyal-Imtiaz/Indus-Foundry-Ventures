@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   TrendingUp,
@@ -19,10 +19,19 @@ import {
   Play
 } from "lucide-react";
 
+const coverImages = [
+  { url: "/startup_funding.png", title: "Startup & Funding Portal", subtitle: "Submit pitch decks, request investment matching, and track seed capital approvals." },
+  { url: "/investment.png", title: "VC & Angel Network", subtitle: "Bridging global Pakistani diaspora investors to premium localized projects." },
+  { url: "/jobs_placement.png", title: "Skill & Job Placements", subtitle: "Direct hiring channel matching verified engineers with deep-tech roles." },
+  { url: "/cofounder_matching.png", title: "Founder-to-Founder Matching", subtitle: "Simulating and forging cofounder synergy for technical & business builders." },
+  { url: "/team_collaboration.png", title: "High-Performance Teams", subtitle: "Nurturing multi-disciplinary team synergy and player-to-player dynamics." }
+];
+
 export default function Home() {
   const [graduatesCount, setGraduatesCount] = useState(500000);
   const [matchesCount, setMatchesCount] = useState(12842);
   const [fundingBridged, setFundingBridged] = useState(482930400);
+  const [currentCoverIndex, setCurrentCoverIndex] = useState(0);
 
   // Pathway Wizard
   const [pathwayProfile, setPathwayProfile] = useState<string | null>(null);
@@ -57,9 +66,14 @@ export default function Home() {
       setTerminalLogs(prev => [randomLog, ...prev.slice(0, 3)]);
     }, 8000);
 
+    const coverInterval = setInterval(() => {
+      setCurrentCoverIndex((prev) => (prev + 1) % coverImages.length);
+    }, 1000);
+
     return () => {
       clearInterval(graduateInterval);
       clearInterval(matchesInterval);
+      clearInterval(coverInterval);
     };
   }, []);
 
@@ -71,99 +85,169 @@ export default function Home() {
       <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] rounded-full bg-white/2 blur-[150px] pointer-events-none"></div>
 
       {/* Hero section */}
-      <section className="relative pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">
-        {/* Animated Badge */}
-        <div className="flex justify-center mb-6">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full badge"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] sm:text-xs font-bold tracking-widest font-mono text-emerald-400">PAKISTAN'S DEEP TECH ENGINE</span>
-          </motion.div>
-        </div>
-
-        <div className="max-w-4xl mx-auto">
-          <motion.h1 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Forging Pakistan's <br />
-            <span className="text-gradient-emerald">Startup & Jobs Ecosystem.</span>
-          </motion.h1>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Pakistan produces <span className="text-emerald-400 font-semibold underline decoration-emerald-500/30 underline-offset-4">500,000+ graduates yearly</span> — but too many remain unemployed because talent, opportunity, and capital never meet. We fix that.
-          </motion.p>
-
-          {/* Quick Metrics Dashboard */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-12"
-          >
-            <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500/40"></div>
-              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>New Graduates This Year</p>
-              <div className="text-2xl sm:text-3xl font-extrabold text-red-400 font-mono tracking-tight flex items-center justify-center gap-1.5">
-                {graduatesCount.toLocaleString()}
-                <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-normal animate-pulse">+1</span>
-              </div>
+      <section className="relative pt-20 pb-16 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Headings, CTAs, and Metrics */}
+          <div className="lg:col-span-7 flex flex-col justify-center text-center lg:text-left">
+            {/* Animated Badge */}
+            <div className="flex justify-center lg:justify-start mb-6">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full badge"
+              >
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] sm:text-xs font-bold tracking-widest font-mono text-emerald-400">PAKISTAN'S DEEP TECH ENGINE</span>
+              </motion.div>
             </div>
 
-            <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-500/40"></div>
-              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Matches Forged</p>
-              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">
-                {matchesCount.toLocaleString()}
-              </div>
-            </div>
-
-            <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-500/40"></div>
-              <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Venture Capital Bridged</p>
-              <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 font-mono tracking-tight">
-                PKR {(fundingBridged / 1000000).toFixed(1)}M
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Quick CTA cluster */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-4 mb-12"
-          >
-            <Link 
-              href="/teams" 
-              className="btn-primary font-extrabold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
+            <motion.h1 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6"
+              style={{ color: "var(--text-primary)" }}
             >
-              Explore Active Modules
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a 
-              href="#onboarding-wizard" 
-              className="btn-secondary font-bold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
+              Forging Pakistan's <br />
+              <span className="text-gradient-emerald">Startup & Jobs Ecosystem.</span>
+            </motion.h1>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-sm sm:text-lg max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
             >
-              Find Your Pathway
-              <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-            </a>
-          </motion.div>
+              Pakistan produces <span className="text-emerald-400 font-semibold underline decoration-emerald-500/30 underline-offset-4">500,000+ graduates yearly</span> — but too many remain unemployed because talent, opportunity, and capital never meet. We fix that.
+            </motion.p>
+
+            {/* Quick CTA cluster */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap justify-center lg:justify-start gap-4 mb-12"
+            >
+              <Link 
+                href="/teams" 
+                className="btn-primary font-extrabold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
+              >
+                Explore Active Modules
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a 
+                href="#onboarding-wizard" 
+                className="btn-secondary font-bold px-8 py-3.5 rounded-xl text-sm tracking-wide flex items-center gap-2"
+              >
+                Find Your Pathway
+                <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+              </a>
+            </motion.div>
+
+            {/* Quick Metrics Dashboard */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full"
+            >
+              <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500/40"></div>
+                <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>New Graduates This Year</p>
+                <div className="text-2xl sm:text-3xl font-extrabold text-red-400 font-mono tracking-tight flex items-center justify-center gap-1.5">
+                  {graduatesCount.toLocaleString()}
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-normal animate-pulse">+1</span>
+                </div>
+              </div>
+
+              <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-500/40"></div>
+                <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Matches Forged</p>
+                <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">
+                  {matchesCount.toLocaleString()}
+                </div>
+              </div>
+
+              <div className="glass-panel p-5 rounded-2xl border border-white/5 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-500/40"></div>
+                <p className="text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: "var(--text-muted)" }}>Venture Capital Bridged</p>
+                <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 font-mono tracking-tight">
+                  PKR {(fundingBridged / 1000000).toFixed(1)}M
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Column: Stunning Interactive Auto-Changing Cover Images */}
+          <div className="lg:col-span-5 w-full flex justify-center">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="relative w-full max-w-md h-[400px] sm:h-[480px] rounded-3xl overflow-hidden glass-panel border border-white/10 shadow-2xl flex flex-col justify-end group"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentCoverIndex}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${coverImages[currentCoverIndex].url})` }}
+                />
+              </AnimatePresence>
+              
+              {/* Dark gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent pointer-events-none" />
+
+              {/* Top overlay badge for indicator */}
+              <div className="absolute top-4 right-4 z-10 flex gap-1 bg-black/45 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                {coverImages.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentCoverIndex ? "bg-emerald-400 w-3.5" : "bg-white/30"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Content Overlay */}
+              <div className="relative z-10 p-6 sm:p-8 text-left">
+                <motion.span 
+                  key={`tag-${currentCoverIndex}`}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="inline-block px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] uppercase font-bold tracking-widest font-mono mb-2"
+                >
+                  Dynamic Ecosystem Module
+                </motion.span>
+                <motion.h3 
+                  key={`title-${currentCoverIndex}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-tight mb-2"
+                >
+                  {coverImages[currentCoverIndex].title}
+                </motion.h3>
+                <motion.p 
+                  key={`sub-${currentCoverIndex}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs sm:text-sm text-slate-200 line-clamp-2"
+                >
+                  {coverImages[currentCoverIndex].subtitle}
+                </motion.p>
+              </div>
+            </motion.div>
+          </div>
+
         </div>
       </section>
 
