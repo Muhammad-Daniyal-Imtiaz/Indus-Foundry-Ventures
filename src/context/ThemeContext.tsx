@@ -1,23 +1,48 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type Theme = "emerald" | "grey" | "blue" | "mirror" | "sunset" | "lavender" | "rose" | "teal" | "amber" | "crimson";
+type Theme = 
+  | "pakistan"
+  | "emerald" 
+  | "nordic" 
+  | "slate" 
+  | "lavender" 
+  | "sunset" 
+  | "rose" 
+  | "teal" 
+  | "amber" 
+  | "sand" 
+  | "sage" 
+  | "clay";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (t: Theme) => void;
 }
 
-const VALID_THEMES: Theme[] = ["emerald", "grey", "blue", "mirror", "sunset", "lavender", "rose", "teal", "amber", "crimson"];
+const VALID_THEMES: Theme[] = [
+  "pakistan",
+  "emerald",
+  "nordic",
+  "slate",
+  "lavender",
+  "sunset",
+  "rose",
+  "teal",
+  "amber",
+  "sand",
+  "sage",
+  "clay"
+];
 
-const ThemeContext = createContext<ThemeContextType>({ theme: "emerald", setTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: "pakistan", setTheme: () => {} });
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("emerald");
+  const [theme, setThemeState] = useState<Theme>("pakistan");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -27,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(saved);
       document.documentElement.setAttribute("data-theme", saved);
     } else {
-      document.documentElement.setAttribute("data-theme", "emerald");
+      document.documentElement.setAttribute("data-theme", "pakistan");
     }
   }, []);
 
@@ -47,3 +72,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </ThemeContext.Provider>
   );
 }
+

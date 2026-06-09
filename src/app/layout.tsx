@@ -33,7 +33,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('connectin-theme');if(t&&['emerald','grey','blue','mirror','sunset','lavender','rose','teal','amber','crimson'].includes(t))document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('connectin-theme');if(t&&['pakistan','emerald','nordic','slate','lavender','sunset','rose','teal','amber','sand','sage','clay'].includes(t))document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','pakistan')}catch(e){}`,
           }}
         />
       </head>

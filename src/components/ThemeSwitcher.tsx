@@ -4,16 +4,18 @@ import { useTheme } from "@/context/ThemeContext";
 import { Palette, Sun, Moon, Waves, Flame, Gem, Flower2, Droplets, Sparkles, Zap, ChevronDown } from "lucide-react";
 
 const THEMES = [
-  { id: "emerald" as const, label: "Emerald", icon: Moon, color: "#00a86b" },
-  { id: "grey" as const, label: "Grey", icon: Moon, color: "#a1a1aa" },
-  { id: "blue" as const, label: "Blue", icon: Waves, color: "#60a5fa" },
-  { id: "mirror" as const, label: "Mirror Black", icon: Sparkles, color: "#d4d4d8" },
-  { id: "sunset" as const, label: "Sunset", icon: Flame, color: "#f97316" },
-  { id: "lavender" as const, label: "Lavender", icon: Gem, color: "#a78bfa" },
-  { id: "rose" as const, label: "Rose", icon: Flower2, color: "#f472b6" },
-  { id: "teal" as const, label: "Teal", icon: Droplets, color: "#2dd4bf" },
-  { id: "amber" as const, label: "Amber", icon: Sun, color: "#fbbf24" },
-  { id: "crimson" as const, label: "Crimson", icon: Zap, color: "#f87171" },
+  { id: "pakistan" as const, label: "Pakistan Flag", icon: Sparkles, color: "#004124" },
+  { id: "emerald" as const, label: "Emerald Accent", icon: Moon, color: "#10b981" },
+  { id: "nordic" as const, label: "Nordic Breeze", icon: Waves, color: "#38bdf8" },
+  { id: "slate" as const, label: "Sleek Slate", icon: Moon, color: "#94a3b8" },
+  { id: "lavender" as const, label: "Dreamy Lavender", icon: Gem, color: "#c084fc" },
+  { id: "sunset" as const, label: "Terracotta Sunset", icon: Flame, color: "#fb923c" },
+  { id: "rose" as const, label: "Blush Rose", icon: Flower2, color: "#f472b6" },
+  { id: "teal" as const, label: "Ocean Teal", icon: Droplets, color: "#2dd4bf" },
+  { id: "amber" as const, label: "Golden Amber", icon: Sun, color: "#fbbf24" },
+  { id: "sand" as const, label: "Desert Sand", icon: Sun, color: "#f59e0b" },
+  { id: "sage" as const, label: "Mist Sage", icon: Sparkles, color: "#a7f3d0" },
+  { id: "clay" as const, label: "Earthy Clay", icon: Zap, color: "#f87171" },
 ];
 
 export default function ThemeSwitcher() {
