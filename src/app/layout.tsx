@@ -21,6 +21,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ConnectIn | Pakistan's Startup & Jobs Engine",
   description: "ConnectIn bridges the gap between 500,000+ yearly Pakistani graduates, venture capital funding, and corporate deep-tech partnerships. Forging cofounder teams and placements in AI, SaaS, robotics, semiconductors, and fintech.",
+  icons: {
+    icon: "/Connectin.webp",
+    apple: "/Connectin.webp",
+  },
+  openGraph: {
+    title: "ConnectIn | Pakistan's Startup & Jobs Engine",
+    description: "ConnectIn bridges the gap between 500,000+ yearly Pakistani graduates, venture capital funding, and corporate deep-tech partnerships.",
+    images: ["/Connectin.webp"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ConnectIn | Pakistan's Startup & Jobs Engine",
+    description: "ConnectIn bridges the gap between 500,000+ yearly Pakistani graduates, venture capital funding, and corporate deep-tech partnerships.",
+    images: ["/Connectin.webp"],
+  },
 };
 
 export default function RootLayout({

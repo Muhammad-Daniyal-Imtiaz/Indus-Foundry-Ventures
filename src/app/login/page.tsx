@@ -98,13 +98,12 @@ function LoginContent() {
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500 via-cyan-500 to-transparent"></div>
 
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4 group cursor-pointer">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-slate-950 font-black">
-              <Cpu className="w-5 h-5 group-hover:rotate-12 transition-all" />
-            </div>
-            <span className="text-sm font-black tracking-widest text-white uppercase font-mono">
-              ConnectIn
-            </span>
+          <Link href="/" className="inline-flex items-center justify-center mb-4 group cursor-pointer">
+            <img
+              src="/Connectin.webp"
+              alt="ConnectIn"
+              className="h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+            />
           </Link>
           <h2 className="text-2xl font-black tracking-tight text-white uppercase">
             {isRegistering ? "Create Account" : "Welcome Back"}

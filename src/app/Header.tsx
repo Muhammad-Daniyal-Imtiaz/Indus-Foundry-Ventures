@@ -92,9 +92,9 @@ export default function Header() {
         {/* Logo — ConnectIn brand mark */}
         <Link href="/" className="flex items-center group shrink-0 h-12">
           <img
-            src="/connect-in.jpeg"
+            src="/Connectin.webp"
             alt="ConnectIn"
-            className="h-full w-auto object-contain group-hover:scale-105 transition-all duration-300 mix-blend-screen"
+            className="h-full w-auto object-contain group-hover:scale-105 transition-all duration-300"
           />
         </Link>
 
