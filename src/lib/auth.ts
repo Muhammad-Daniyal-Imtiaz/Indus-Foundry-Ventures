@@ -14,8 +14,14 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: googleClientId || "",
       clientSecret: googleClientSecret || "",
+      // CRITICAL: null wellKnown to prevent openid-client Issuer.discover()
+      // (Node.js http/https DNS resolution) which crashes in workerd.
+      wellKnown: null as unknown as undefined,
+      // CRITICAL: ["state"] only — skip pkce which needs openid-client generators.
       checks: ["state"],
+      idToken: false,
       authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
@@ -23,11 +29,42 @@ export const authOptions: NextAuthOptions = {
           scope: "openid email profile",
         },
       },
+      // Custom token exchange via fetch (no openid-client / Node.js http).
+      token: {
+        url: "https://oauth2.googleapis.com/token",
+        async request({ provider, params, checks }: any) {
+          const body = new URLSearchParams({
+            code: params.code,
+            client_id: provider.clientId,
+            client_secret: provider.clientSecret,
+            redirect_uri: provider.callbackUrl,
+            grant_type: "authorization_code",
+          });
+          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
+          const res = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+          const tokens = await res.json();
+          return { tokens };
+        },
+      },
+      // Custom userinfo fetch via fetch (no openid-client / Node.js http).
+      userinfo: {
+        url: "https://openidconnect.googleapis.com/v1/userinfo",
+        async request({ tokens }: any) {
+          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          return res.json();
+        },
+      },
       profile(profile) {
         return {
           id: profile.sub,
           name: profile.name,
-          email: profile.email,
+          email: profile.picture ? profile.email : profile.email, // standard fallback
           image: profile.picture,
         };
       },
