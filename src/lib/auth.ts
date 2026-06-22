@@ -10,100 +10,12 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      // CRITICAL: null wellKnown to prevent openid-client Issuer.discover()
-      // (Node.js http/https DNS resolution) which crashes in workerd.
-      wellKnown: null as unknown as undefined,
-      // CRITICAL: ["state"] only — skip pkce which needs openid-client generators.
-      checks: ["state"],
-      idToken: false,
       authorization: {
-        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
-          scope: "openid email profile",
         },
-      },
-      // Custom token exchange via fetch (no openid-client / Node.js http).
-      token: {
-        url: "https://oauth2.googleapis.com/token",
-        async request({ provider, params, checks }: any) {
-          try {
-            if (!params.code) {
-              throw new Error("No authorization code received");
-            }
-
-            const body = new URLSearchParams({
-              code: params.code,
-              client_id: provider.clientId,
-              client_secret: provider.clientSecret,
-              redirect_uri: provider.callbackUrl,
-              grant_type: "authorization_code",
-            });
-            
-            if (checks?.code_verifier) {
-              body.set("code_verifier", checks.code_verifier);
-            }
-
-            const res = await fetch("https://oauth2.googleapis.com/token", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body,
-            });
-
-            if (!res.ok) {
-              const errorData = await res.text();
-              console.error("Token exchange failed:", res.status, errorData);
-              throw new Error(`Token exchange failed: ${res.status}`);
-            }
-
-            const tokens = await res.json();
-            
-            if (!tokens.access_token) {
-              throw new Error("No access token in response");
-            }
-
-            return { tokens };
-          } catch (error) {
-            console.error("Token request error:", error);
-            throw error;
-          }
-        },
-      },
-      // Custom userinfo fetch via fetch (no openid-client / Node.js http).
-      userinfo: {
-        url: "https://openidconnect.googleapis.com/v1/userinfo",
-        async request({ tokens }: any) {
-          try {
-            if (!tokens.access_token) {
-              throw new Error("No access token available");
-            }
-
-            const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-              headers: { Authorization: `Bearer ${tokens.access_token}` },
-            });
-
-            if (!res.ok) {
-              const errorData = await res.text();
-              console.error("Userinfo fetch failed:", res.status, errorData);
-              throw new Error(`Userinfo fetch failed: ${res.status}`);
-            }
-
-            return res.json();
-          } catch (error) {
-            console.error("Userinfo request error:", error);
-            throw error;
-          }
-        },
-      },
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-        };
       },
     }),
     CredentialsProvider({
@@ -260,17 +172,4 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
-  // @ts-ignore: useSecureCookies is valid NextAuth option
-  useSecureCookies: true,
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
-      },
-    },
-  },
 };
