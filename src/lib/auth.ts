@@ -257,7 +257,20 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "indus-foundry-secret-key-123456",
+  secret: process.env.NEXTAUTH_SECRET,
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
+  // @ts-ignore: useSecureCookies is valid NextAuth option
+  useSecureCookies: true,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
+  },
 };
