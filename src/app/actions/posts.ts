@@ -4,13 +4,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
-import { eq, desc, count, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
+import { and, eq, desc, count, lt } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
-const _getCachedPostById = unstable_cache(
-  async (postId: string, currentUserId: string | null) => {
+async function getPostByIdFromDb(postId: string, currentUserId: string | null) {
     const result = await db
       .select({
         post: posts,
@@ -39,8 +38,7 @@ const _getCachedPostById = unstable_cache(
       const myLike = await db
         .select()
         .from(postLikes)
-        .where(eq(postLikes.postId, postId))
-        .where(eq(postLikes.userId, currentUserId))
+        .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, currentUserId)))
         .limit(1);
       likedByMe = myLike.length > 0;
     }
@@ -67,13 +65,9 @@ const _getCachedPostById = unstable_cache(
         likers,
       },
     };
-  },
-  ["posts-detail"],
-  { revalidate: 300, tags: ["posts"] }
-);
+}
 
-const _getCachedPosts = unstable_cache(
-  async (limit: number, cursor: string | undefined, currentUserId: string | null) => {
+async function getPostsFromDb(limit: number, cursor: string | undefined, currentUserId: string | null) {
     const whereClause = cursor ? lt(posts.createdAt, cursor) : undefined;
 
     const list = await db
@@ -104,8 +98,7 @@ const _getCachedPosts = unstable_cache(
         const myLike = await db
           .select()
           .from(postLikes)
-          .where(eq(postLikes.postId, post.id))
-          .where(eq(postLikes.userId, currentUserId))
+          .where(and(eq(postLikes.postId, post.id), eq(postLikes.userId, currentUserId)))
           .limit(1);
         likedByMe = myLike.length > 0;
       }
@@ -121,13 +114,9 @@ const _getCachedPosts = unstable_cache(
     }));
 
     return { success: true, posts: formattedPosts, nextCursor, hasMore };
-  },
-  ["posts-list"],
-  { revalidate: 300, tags: ["posts"] }
-);
+}
 
-const _getCachedPostLikes = unstable_cache(
-  async (postId: string) => {
+async function getPostLikesFromDb(postId: string) {
     const likes = await db
       .select({
         userId: postLikes.userId,
@@ -139,10 +128,7 @@ const _getCachedPostLikes = unstable_cache(
       .orderBy(desc(postLikes.createdAt));
 
     return { success: true, likes };
-  },
-  ["post-likes"],
-  { revalidate: 300, tags: ["posts"] }
-);
+}
 
 // ─── Exported server actions ────────────────────────────────────────────
 
@@ -156,7 +142,7 @@ export async function getPostById(postId: string) {
       if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
     }
 
-    return await _getCachedPostById(postId, currentUserId);
+    return await getPostByIdFromDb(postId, currentUserId);
   } catch (error: any) {
     console.error("Error loading post:", error);
     return { success: false, error: "Failed to load post." };
@@ -173,7 +159,7 @@ export async function getPosts(limit = 10, cursor?: string) {
       if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
     }
 
-    return await _getCachedPosts(limit, cursor, currentUserId);
+    return await getPostsFromDb(limit, cursor, currentUserId);
   } catch (error) {
     console.error("Error loading posts:", error);
     return { success: false, error: "Failed to load posts from database." };
@@ -247,7 +233,6 @@ export async function createPost(formData: FormData) {
 
     await db.insert(posts).values(newPost);
 
-    revalidateTag("posts");
     revalidatePath("/feed");
 
     return {
@@ -284,15 +269,13 @@ export async function toggleLike(postId: string) {
     const existing = await db
       .select()
       .from(postLikes)
-      .where(eq(postLikes.postId, postId))
-      .where(eq(postLikes.userId, dbUser.id))
+      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, dbUser.id)))
       .limit(1);
 
     if (existing.length > 0) {
       await db
         .delete(postLikes)
-        .where(eq(postLikes.postId, postId))
-        .where(eq(postLikes.userId, dbUser.id));
+        .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, dbUser.id)));
     } else {
       await db.insert(postLikes).values({
         postId,
@@ -307,7 +290,6 @@ export async function toggleLike(postId: string) {
       .from(postLikes)
       .where(eq(postLikes.postId, postId));
 
-    revalidateTag("posts");
     revalidatePath("/feed");
     revalidatePath(`/feed/${postId}`);
 
@@ -324,7 +306,7 @@ export async function toggleLike(postId: string) {
 
 export async function getPostLikes(postId: string) {
   try {
-    return await _getCachedPostLikes(postId);
+    return await getPostLikesFromDb(postId);
   } catch (error: any) {
     console.error("Error getting post likes:", error);
     return { success: false, error: error.message || "Failed to get likes." };

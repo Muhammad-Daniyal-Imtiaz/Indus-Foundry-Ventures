@@ -5,50 +5,22 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const NEXTAUTH_URL = process.env.NEXTAUTH_URL || "https://indus-foundry-ventures.pages.dev";
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_ID || process.env.key;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_SECRET || process.env.secret;
+const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: googleClientId || "",
+      clientSecret: googleClientSecret || "",
       checks: ["state"],
       authorization: {
-        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
           scope: "openid email profile",
-        },
-      },
-      token: {
-        url: "https://oauth2.googleapis.com/token",
-        async request({ provider, params, checks }: any) {
-          const body = new URLSearchParams({
-            code: params.code,
-            client_id: provider.clientId as string,
-            client_secret: provider.clientSecret as string,
-            redirect_uri: provider.callbackUrl,
-            grant_type: "authorization_code",
-          });
-          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
-          const res = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body,
-          });
-          const tokens = await res.json();
-          return { tokens };
-        },
-      },
-      userinfo: {
-        url: "https://openidconnect.googleapis.com/v1/userinfo",
-        async request({ tokens }: any) {
-          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-            headers: { Authorization: `Bearer ${tokens.access_token}` },
-          });
-          return res.json();
         },
       },
       profile(profile) {
@@ -173,7 +145,16 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
+  debug: process.env.NODE_ENV !== "production",
+  logger: {
+    error(code, metadata) {
+      console.error("NextAuth error:", code, metadata);
+    },
+    warn(code) {
+      console.warn("NextAuth warning:", code);
+    },
+  },
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
 };
