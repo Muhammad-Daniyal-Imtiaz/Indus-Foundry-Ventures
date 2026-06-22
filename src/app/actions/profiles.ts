@@ -5,14 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users, profiles, posts, mvps, freelanceProjects, connections, follows, postLikes } from "@/db/schema";
 import { eq, desc, and, lt, count, or, like } from "drizzle-orm";
-import { unstable_cache, cacheLife } from "next/cache";
+import { unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
 const _getCachedUserProfile = unstable_cache(
   async (userId: string, currentUserId: string | null) => {
-    cacheLife("users");
-
     const userRows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!userRows.length) return { success: false, error: "User not found." };
     const user = userRows[0];
@@ -100,8 +98,6 @@ const _getCachedUserProfile = unstable_cache(
 
 const _getCachedAllUsers = unstable_cache(
   async (limit: number, cursor: string | undefined) => {
-    cacheLife("users");
-
     const whereClause = cursor ? lt(users.createdAt, cursor) : undefined;
 
     const userList = await db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(limit + 1);

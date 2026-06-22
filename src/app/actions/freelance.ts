@@ -5,14 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { freelanceProjects, users, profiles, freelanceSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
 const _getCachedFreelanceProjects = unstable_cache(
   async (limit: number, cursor: string | undefined, currentUserId: string | null) => {
-    cacheLife("freelance");
-
     const whereClause = cursor ? lt(freelanceProjects.createdAt, cursor) : undefined;
 
     const list = await db

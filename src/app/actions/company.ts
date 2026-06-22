@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companyPages, users, jobPostings, jobApplications } from "@/db/schema";
 import { eq, desc, like, sql, and, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -23,8 +23,6 @@ function generateSlug(name: string): string {
 
 const _getCachedCompanyPages = unstable_cache(
   async (limit: number, cursor: string | undefined) => {
-    cacheLife("companies");
-
     const whereClause = cursor ? lt(companyPages.createdAt, cursor) : undefined;
 
     const rows = await db
@@ -54,8 +52,6 @@ const _getCachedCompanyPages = unstable_cache(
 
 const _getCachedCompanyPageBySlug = unstable_cache(
   async (slug: string) => {
-    cacheLife("companies");
-
     const rows = await db
       .select({ page: companyPages, owner: users })
       .from(companyPages)

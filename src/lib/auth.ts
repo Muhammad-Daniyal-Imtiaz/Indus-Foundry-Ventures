@@ -5,17 +5,59 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+const NEXTAUTH_URL = process.env.NEXTAUTH_URL || "https://indus-foundry-ventures.pages.dev";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      checks: ["state"],
       authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
+      },
+      token: {
+        url: "https://oauth2.googleapis.com/token",
+        async request({ provider, params, checks }: any) {
+          const body = new URLSearchParams({
+            code: params.code,
+            client_id: provider.clientId as string,
+            client_secret: provider.clientSecret as string,
+            redirect_uri: provider.callbackUrl,
+            grant_type: "authorization_code",
+          });
+          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
+          const res = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+          const tokens = await res.json();
+          return { tokens };
+        },
+      },
+      userinfo: {
+        url: "https://openidconnect.googleapis.com/v1/userinfo",
+        async request({ tokens }: any) {
+          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          return res.json();
+        },
+      },
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
       },
     }),
     CredentialsProvider({
@@ -36,11 +78,9 @@ export const authOptions: NextAuthOptions = {
         const role = (credentials.role || "Founder").trim();
         const avatarUrl = credentials.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
 
-        // Check if user exists in database
         let existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
         if (existingUser.length === 0) {
-          // Create new user in Turso DB
           const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
           await db.insert(users).values({
             id: newUserId,
@@ -60,7 +100,6 @@ export const authOptions: NextAuthOptions = {
             };
           }
         } else {
-          // Return existing user
           return {
             id: existingUser[0].id,
             email: existingUser[0].email,
@@ -76,92 +115,46 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }: any) {
-      try {
-        if (account?.provider === "google") {
-          if (!user.email) {
-            console.error("Google sign-in failed: No email provided");
-            return false;
-          }
+      if (account?.provider === "google") {
+        if (!user.email) return false;
 
-          const email = user.email.toLowerCase().trim();
-          const name = user.name || "Google User";
-          const avatarUrl = user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+        const email = user.email.toLowerCase().trim();
+        const name = user.name || "Google User";
+        const avatarUrl = user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
 
-          // Sync with Turso DB
-          try {
-            const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
-            
-            if (existingUser.length === 0) {
-              const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
-              await db.insert(users).values({
-                id: newUserId,
-                email,
-                name,
-                role: "None", // None triggers OnboardingOverlay to prompt for role
-                avatarUrl,
-              });
-              console.log("New user created:", email);
-            } else {
-              console.log("Existing user signed in:", email);
-            }
-          } catch (dbError) {
-            console.error("Database error during sign-in:", dbError);
-            // Continue with sign-in even if DB fails
-          }
+        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        if (existingUser.length === 0) {
+          const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+          await db.insert(users).values({
+            id: newUserId,
+            email,
+            name,
+            role: "None",
+            avatarUrl,
+          });
         }
-        return true;
-      } catch (error) {
-        console.error("Sign-in callback error:", error);
-        return false;
       }
+      return true;
     },
     async jwt({ token, user, account }: any) {
-      try {
-        if (user) {
-          token.id = user.id;
-          token.role = user.role || "None";
-          token.avatarUrl = user.image || user.avatarUrl;
-        }
-
-        // For Google OAuth, we need to fetch user from DB by email
-        if (account?.provider === "google" && token.email) {
-          try {
-            const dbUsers = await db.select().from(users).where(eq(users.email, token.email)).limit(1);
-            if (dbUsers.length > 0) {
-              token.id = dbUsers[0].id;
-              token.role = dbUsers[0].role;
-              token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
-            }
-          } catch (dbError) {
-            console.error("Database error in JWT callback:", dbError);
-          }
-        } else if (account && token.id) {
-          try {
-            const dbUsers = await db.select().from(users).where(eq(users.id, token.id)).limit(1);
-            if (dbUsers.length > 0) {
-              token.role = dbUsers[0].role;
-              token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
-            }
-          } catch (dbError) {
-            console.error("Database error in JWT callback:", dbError);
-          }
-        }
-        
-        // CRITICAL: Remove large OAuth tokens to prevent cookie overflow
-        // Only keep essential user data in the JWT
-        return {
-          id: token.id,
-          email: token.email,
-          name: token.name,
-          role: token.role,
-          avatarUrl: token.avatarUrl,
-          picture: token.picture,
-          sub: token.sub,
-        };
-      } catch (error) {
-        console.error("JWT callback error:", error);
-        return token;
+      if (user) {
+        token.id = user.id;
+        token.role = user.role || "None";
+        token.avatarUrl = user.image || user.avatarUrl;
       }
+
+      if (account && token.id) {
+        try {
+          const dbUsers = await db.select().from(users).where(eq(users.id, token.id)).limit(1);
+          if (dbUsers.length > 0) {
+            token.role = dbUsers[0].role;
+            token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+          }
+        } catch {
+          // non-fatal
+        }
+      }
+      return token;
     },
     async session({ session, token }: any) {
       if (token && session.user) {
@@ -175,48 +168,12 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    error: "/auth/error",
+    error: "/login",
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production'
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-    callbackUrl: {
-      name: process.env.NODE_ENV === 'production'
-        ? '__Secure-next-auth.callback-url'
-        : 'next-auth.callback-url',
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-    csrfToken: {
-      name: process.env.NODE_ENV === 'production'
-        ? '__Host-next-auth.csrf-token'
-        : 'next-auth.csrf-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-  debug: process.env.NODE_ENV === 'development',
 };

@@ -5,14 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { challenges, companyPages, users, challengeTeams, challengeSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
 const _getCachedChallenges = unstable_cache(
   async (limit: number, cursor: string | undefined) => {
-    cacheLife("challenges");
-
     const whereClause = cursor ? lt(challenges.createdAt, cursor) : undefined;
 
     const list = await db
@@ -34,8 +32,6 @@ const _getCachedChallenges = unstable_cache(
 
 const _getCachedChallengeById = unstable_cache(
   async (id: string) => {
-    cacheLife("challenges");
-
     const list = await db.select().from(challenges).where(eq(challenges.id, id)).limit(1);
     if (!list.length) return { success: false, error: "Challenge not found." };
     return { success: true, challenge: list[0] };
@@ -46,8 +42,6 @@ const _getCachedChallengeById = unstable_cache(
 
 const _getCachedChallengeTeams = unstable_cache(
   async (challengeId: string) => {
-    cacheLife("challenges");
-
     const list = await db
       .select()
       .from(challengeTeams)
@@ -61,8 +55,6 @@ const _getCachedChallengeTeams = unstable_cache(
 
 const _getCachedChallengeSubmissions = unstable_cache(
   async (challengeId: string) => {
-    cacheLife("challenges");
-
     const list = await db
       .select()
       .from(challengeSubmissions)

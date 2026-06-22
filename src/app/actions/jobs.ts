@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { jobPostings, jobApplications, users, companyPages } from "@/db/schema";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
@@ -16,8 +16,6 @@ const _getCachedJobs = unstable_cache(
     cursor: string | undefined,
     currentUserId: string | null
   ) => {
-    cacheLife("jobs");
-
     const conditions = [eq(jobPostings.isOpen, true)];
     if (cursor) {
       conditions.push(lt(jobPostings.createdAt, cursor));

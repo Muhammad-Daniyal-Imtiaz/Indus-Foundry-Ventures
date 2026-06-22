@@ -5,14 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { mvps, users, profiles } from "@/db/schema";
 import { eq, desc, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
 const _getCachedMvps = unstable_cache(
   async (limit: number, cursor: string | undefined) => {
-    cacheLife("marketplace");
-
     const whereClause = cursor ? lt(mvps.createdAt, cursor) : undefined;
 
     const list = await db

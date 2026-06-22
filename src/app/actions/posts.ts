@@ -5,14 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
 import { eq, desc, count, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Cached inner functions ─────────────────────────────────────────────
 
 const _getCachedPostById = unstable_cache(
   async (postId: string, currentUserId: string | null) => {
-    cacheLife("feed");
-
     const result = await db
       .select({
         post: posts,
@@ -76,8 +74,6 @@ const _getCachedPostById = unstable_cache(
 
 const _getCachedPosts = unstable_cache(
   async (limit: number, cursor: string | undefined, currentUserId: string | null) => {
-    cacheLife("feed");
-
     const whereClause = cursor ? lt(posts.createdAt, cursor) : undefined;
 
     const list = await db
@@ -132,8 +128,6 @@ const _getCachedPosts = unstable_cache(
 
 const _getCachedPostLikes = unstable_cache(
   async (postId: string) => {
-    cacheLife("feed");
-
     const likes = await db
       .select({
         userId: postLikes.userId,

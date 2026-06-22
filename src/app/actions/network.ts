@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users, profiles, connections, follows } from "@/db/schema";
 import { eq, and, or, count, desc, lt } from "drizzle-orm";
-import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -21,8 +21,6 @@ async function getCurrentUser() {
 
 const _getCachedUserNetwork = unstable_cache(
   async (targetUserId: string) => {
-    cacheLife("network");
-
     const targetUsers = await db.select().from(users).where(eq(users.id, targetUserId)).limit(1);
     if (targetUsers.length === 0) return { success: false, error: "User not found" };
     const target = targetUsers[0];
@@ -55,8 +53,6 @@ const _getCachedUserNetwork = unstable_cache(
 
 const _getCachedMyNetwork = unstable_cache(
   async (myId: string, suggestionsLimit: number, suggestionsCursor: string | undefined) => {
-    cacheLife("network");
-
     const acceptedAsSender = await db.select().from(connections)
       .where(and(eq(connections.senderId, myId), eq(connections.status, "accepted")));
     const acceptedAsReceiver = await db.select().from(connections)

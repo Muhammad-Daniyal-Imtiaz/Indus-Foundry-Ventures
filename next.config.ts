@@ -15,16 +15,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    cacheLife: {
-      feed: { revalidate: 300, expire: 3600 },
-      marketplace: { revalidate: 600, expire: 7200 },
-      challenges: { revalidate: 300, expire: 3600 },
-      freelance: { revalidate: 600, expire: 7200 },
-      companies: { revalidate: 600, expire: 7200 },
-      jobs: { revalidate: 600, expire: 7200 },
-      users: { revalidate: 300, expire: 3600 },
-      network: { revalidate: 120, expire: 1800 },
-    },
   },
   serverExternalPackages: [
     "@libsql/client",
