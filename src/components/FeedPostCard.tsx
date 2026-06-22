@@ -78,13 +78,15 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
     <div className="bg-[#1d2226] border border-[#38434f] rounded-lg mb-2 overflow-hidden text-[#e9eaec] font-sans">
       {/* Header */}
       <div className="flex items-start px-4 pt-3 pb-1">
-        <img src={post.userAvatar} className="w-12 h-12 rounded-full mr-3 cursor-pointer object-cover" />
+        <Link href={`/users/${post.userId}`}>
+          <img src={post.userAvatar} className="w-12 h-12 rounded-full mr-3 cursor-pointer object-cover hover:ring-2 hover:ring-emerald-500/30 transition-all" />
+        </Link>
         <div className="flex-1 leading-tight">
           <div className="flex flex-col">
-             <span className="font-semibold text-[15px] cursor-pointer hover:text-[#0a66c2] hover:underline transition-colors flex items-center gap-1.5">
+             <Link href={`/users/${post.userId}`} className="font-semibold text-[15px] cursor-pointer hover:text-emerald-400 hover:underline transition-colors flex items-center gap-1.5">
                {post.userName}
                <span className="text-[#8c959f] font-normal text-sm">• 1st</span>
-             </span>
+             </Link>
              <span className="text-xs text-[#8c959f] mt-0.5">{post.userRole}</span>
              {post.category && (
                <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border w-fit ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
@@ -186,14 +188,14 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
                   <div className="p-4 text-center text-xs text-[#8c959f]">No likes yet</div>
                 ) : (
                   likers.map((liker) => (
-                    <div key={liker.userId} className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#38434f] transition-colors">
+                    <Link key={liker.userId} href={`/users/${liker.userId}`} className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#38434f] transition-colors">
                       <img
                         src={liker.userAvatar}
                         alt={liker.userName}
                         className="w-7 h-7 rounded-full object-cover"
                       />
                       <span className="text-xs font-semibold text-white truncate">{liker.userName}</span>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>

@@ -153,9 +153,11 @@ export default function NetworkPage() {
                   {data.pendingIncoming.map((req: any) => (
                     <div key={req.id} className="bg-[#1d2226] border border-[#38434f] rounded-xl p-4 hover:border-amber-500/30 transition-all">
                       <div className="flex items-center gap-3 mb-3">
-                        <img src={req.avatar} alt={req.name} className="w-12 h-12 rounded-full object-cover" />
+                        <Link href={`/users/${req.userId}`}>
+                          <img src={req.avatar} alt={req.name} className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-emerald-500/30 transition-all cursor-pointer" />
+                        </Link>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-[var(--text-primary)] truncate">{req.name}</p>
+                          <Link href={`/users/${req.userId}`} className="text-sm font-bold text-[var(--text-primary)] truncate hover:text-emerald-400 transition-colors block">{req.name}</Link>
                           <p className="text-[10px] text-[var(--text-muted)]">{req.since ? new Date(req.since).toLocaleDateString() : ""}</p>
                         </div>
                       </div>
@@ -183,9 +185,11 @@ export default function NetworkPage() {
                   {data.pendingOutgoing.map((req: any) => (
                     <div key={req.id} className="bg-[#1d2226] border border-[#38434f] rounded-xl p-4 hover:border-amber-500/20 transition-all">
                       <div className="flex items-center gap-3">
-                        <img src={req.avatar} alt={req.name} className="w-12 h-12 rounded-full object-cover" />
+                        <Link href={`/users/${req.userId}`}>
+                          <img src={req.avatar} alt={req.name} className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-emerald-500/30 transition-all cursor-pointer" />
+                        </Link>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-[var(--text-primary)] truncate">{req.name}</p>
+                          <Link href={`/users/${req.userId}`} className="text-sm font-bold text-[var(--text-primary)] truncate hover:text-emerald-400 transition-colors block">{req.name}</Link>
                           <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Pending</span>
                         </div>
                       </div>
@@ -208,9 +212,11 @@ export default function NetworkPage() {
               {data.connections.map((conn: any) => (
                 <div key={conn.id} className="bg-[#1d2226] border border-[#38434f] rounded-xl p-4 hover:border-emerald-500/30 transition-all">
                   <div className="flex items-center gap-3">
-                    <img src={conn.avatar} alt={conn.name} className="w-12 h-12 rounded-full object-cover" />
+                    <Link href={`/users/${conn.id}`}>
+                      <img src={conn.avatar} alt={conn.name} className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-emerald-500/30 transition-all cursor-pointer" />
+                    </Link>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-[var(--text-primary)] truncate">{conn.name}</p>
+                      <Link href={`/users/${conn.id}`} className="text-sm font-bold text-[var(--text-primary)] truncate hover:text-emerald-400 transition-colors block">{conn.name}</Link>
                       <p className="text-[10px] text-[var(--text-muted)]">Connected {conn.since ? new Date(conn.since).toLocaleDateString() : ""}</p>
                     </div>
                   </div>
@@ -247,13 +253,15 @@ export default function NetworkPage() {
                   {/* Avatar */}
                   <div className="px-4 pb-4">
                     <div className="-mt-7 mb-2 relative z-10">
-                      <img
-                        src={user.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.name)}`}
-                        alt={user.name}
-                        className="w-14 h-14 rounded-full border-4 border-[#1d2226] object-cover bg-slate-800"
-                      />
+                      <Link href={`/users/${user.id}`}>
+                        <img
+                          src={user.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.name)}`}
+                          alt={user.name}
+                          className="w-14 h-14 rounded-full border-4 border-[#1d2226] object-cover bg-slate-800 hover:ring-2 hover:ring-emerald-500/30 transition-all cursor-pointer"
+                        />
+                      </Link>
                     </div>
-                    <p className="text-sm font-bold text-[var(--text-primary)] truncate">{user.name}</p>
+                    <Link href={`/users/${user.id}`} className="text-sm font-bold text-[var(--text-primary)] truncate hover:text-emerald-400 transition-colors block">{user.name}</Link>
                     <p className="text-[10px] text-[var(--text-muted)] truncate">{user.role || "Builder"}</p>
                     {user.profile?.location && (
                       <p className="flex items-center gap-1 text-[9px] text-[var(--text-muted)] mt-1">

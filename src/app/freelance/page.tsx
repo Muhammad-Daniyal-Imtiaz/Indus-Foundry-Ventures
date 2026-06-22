@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase,
@@ -274,6 +275,18 @@ export default function FreelancePage() {
                       </span>
                     ))}
                   </div>
+
+                  {/* Posted by */}
+                  {(project as any).userName && (
+                    <Link href={`/users/${(project as any).userId}`} className="flex items-center gap-2 mt-3 p-2 -mx-2 rounded-lg hover:bg-white/5 transition-all group/poster">
+                      <img
+                        src={`https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent((project as any).userName)}`}
+                        alt={(project as any).userName}
+                        className="w-6 h-6 rounded-full object-cover bg-slate-800"
+                      />
+                      <p className="text-[10px] font-bold text-slate-400 group-hover/poster:text-teal-400 transition-colors">Posted by {(project as any).userName}</p>
+                    </Link>
+                  )}
                 </div>
 
                 <div className="w-full md:w-64 bg-[#141b24] p-5 rounded-2xl border border-[#38434f] flex flex-col justify-between shrink-0">

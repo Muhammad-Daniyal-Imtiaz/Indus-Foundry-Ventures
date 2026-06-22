@@ -345,7 +345,15 @@ export default function JobsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-white truncate">{job.title}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{job.companyName} {job.department && <span className="text-slate-600">·</span>} {job.department}</p>
+                        <p className="text-[10px] text-slate-500 truncate">
+                          {job.companySlug ? (
+                            <Link href={`/company/${job.companySlug}`} className="hover:text-teal-400 transition-colors" onClick={(e) => e.stopPropagation()}>{job.companyName}</Link>
+                          ) : (
+                            job.companyName
+                          )}
+                          {job.department && <span className="text-slate-600"> · </span>}
+                          {job.department}
+                        </p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${EXP_COLORS[job.experienceLevel] || EXP_COLORS.Mid}`}>{job.experienceLevel}</span>
                           <span className="flex items-center gap-0.5 text-[9px] text-slate-500 font-semibold">{LOC_ICONS[job.locationType]}{job.locationType}</span>

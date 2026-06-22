@@ -122,6 +122,16 @@ export default function Header() {
             My Network
           </Link>
 
+          {/* People Link */}
+          <Link 
+            href="/users"
+            className={`text-xs font-bold tracking-wide transition-all ${
+              pathname === "/users" ? "text-accent" : "text-secondary hover:text-primary"
+            }`}
+          >
+            People
+          </Link>
+
           {/* Dropdown 1: Forging Modules */}
           <div 
             className="relative"
@@ -421,6 +431,14 @@ export default function Header() {
                 style={{ color: "var(--text-primary)" }}
               >
                 My Network
+              </Link>
+
+              <Link 
+                href="/users"
+                className="block text-sm font-bold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                People
               </Link>
               
               <div className="space-y-2">

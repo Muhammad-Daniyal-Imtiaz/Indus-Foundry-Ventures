@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import {
@@ -461,7 +462,11 @@ export default function ChallengesPage() {
                       ) : (
                         <Building2 className="w-5 h-5 text-slate-400" />
                       )}
-                      <span className="text-xs font-bold text-slate-300">{challenge.companyName}</span>
+                      {challenge.companySlug ? (
+                        <Link href={`/company/${challenge.companySlug}`} className="text-xs font-bold text-slate-300 hover:text-emerald-400 transition-colors">{challenge.companyName}</Link>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-300">{challenge.companyName}</span>
+                      )}
                       <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 ml-2">
                         {challenge.category}
                       </span>

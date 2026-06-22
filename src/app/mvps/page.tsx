@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Sparkles,
   Search,
@@ -584,13 +585,26 @@ export default function MVPMarketplace() {
                   </div>
 
                   {/* Tech stack */}
-                  <div className="flex flex-wrap gap-1.5 mb-5">
+                  <div className="flex flex-wrap gap-1.5 mb-4">
                     {m.techStack.map(t => (
                       <span key={t} className="text-[9.5px] font-mono font-bold text-slate-500 bg-white/[0.02] border border-white/5 px-2 py-0.5 rounded">
                         {t}
                       </span>
                     ))}
                   </div>
+
+                  {/* Seller info */}
+                  <Link href={`/users/${m.userId}`} className="flex items-center gap-2 p-2 -mx-2 rounded-lg hover:bg-white/5 transition-all group/seller">
+                    <img
+                      src={m.userAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(m.userName)}`}
+                      alt={m.userName}
+                      className="w-7 h-7 rounded-full object-cover bg-slate-800 hover:ring-2 hover:ring-emerald-500/30 transition-all"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-300 group-hover/seller:text-emerald-400 transition-colors truncate">{m.userName}</p>
+                      {m.userRole && <p className="text-[9px] text-slate-500 font-medium truncate">{m.userRole}</p>}
+                    </div>
+                  </Link>
                 </div>
 
                 {/* Card Action footer */}
