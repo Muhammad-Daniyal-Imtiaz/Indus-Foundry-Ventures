@@ -146,7 +146,18 @@ export const authOptions: NextAuthOptions = {
             console.error("Database error in JWT callback:", dbError);
           }
         }
-        return token;
+        
+        // CRITICAL: Remove large OAuth tokens to prevent cookie overflow
+        // Only keep essential user data in the JWT
+        return {
+          id: token.id,
+          email: token.email,
+          name: token.name,
+          role: token.role,
+          avatarUrl: token.avatarUrl,
+          picture: token.picture,
+          sub: token.sub,
+        };
       } catch (error) {
         console.error("JWT callback error:", error);
         return token;
@@ -168,8 +179,44 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.callback-url'
+        : 'next-auth.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Host-next-auth.csrf-token'
+        : 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
 };
