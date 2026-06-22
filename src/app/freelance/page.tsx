@@ -54,7 +54,7 @@ export default function FreelancePage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const result = await getFreelanceProjects(10);
+        const result = await getFreelanceProjects(3);
         if (result.success && result.projects && result.projects.length > 0) {
           setProjects(result.projects.map(p => ({
             ...p,
@@ -135,7 +135,7 @@ export default function FreelancePage() {
     if (!projectsCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const result = await getFreelanceProjects(10, projectsCursor);
+      const result = await getFreelanceProjects(3, projectsCursor);
       if (result.success && result.projects) {
         setProjects(prev => [...prev, ...result.projects.map(p => ({
           ...p,

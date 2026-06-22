@@ -68,7 +68,7 @@ export default function JobsPage() {
     async function load() {
       setLoading(true);
       const [jobsRes, companyRes, appsRes] = await Promise.all([
-        getAllJobs(undefined, 10),
+        getAllJobs(undefined, 3),
         session ? getMyCompanyPages() : Promise.resolve({ success: true, pages: [] }),
         session ? getMyApplications() : Promise.resolve({ success: true, applications: [] }),
       ]);
@@ -134,7 +134,7 @@ export default function JobsPage() {
     if (!jobsCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const jobsRes = await getAllJobs(undefined, 10, jobsCursor);
+      const jobsRes = await getAllJobs(undefined, 3, jobsCursor);
       if (jobsRes.success && jobsRes.jobs) {
         setJobs(prev => [...prev, ...jobsRes.jobs]);
         setJobsCursor(jobsRes.nextCursor ?? null);

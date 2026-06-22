@@ -195,7 +195,7 @@ export default function MVPMarketplace() {
   useEffect(() => {
     const fetchMvps = async () => {
       try {
-        const result = await getMvps(10);
+        const result = await getMvps(3);
         if (result.success && result.mvps && result.mvps.length > 0) {
           setMvps(result.mvps as MVP[]);
           setMvpsCursor(result.nextCursor ?? null);
@@ -233,7 +233,7 @@ export default function MVPMarketplace() {
     if (!mvpsCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const result = await getMvps(10, mvpsCursor);
+      const result = await getMvps(3, mvpsCursor);
       if (result.success && result.mvps) {
         setMvps(prev => [...prev, ...(result.mvps as MVP[])]);
         setMvpsCursor(result.nextCursor ?? null);

@@ -41,7 +41,7 @@ export default function CompaniesPage() {
     async function load() {
       setLoading(true);
       const [all, mine] = await Promise.all([
-        getAllCompanyPages(10),
+        getAllCompanyPages(3),
         session ? getMyCompanyPage() : Promise.resolve({ success: true, page: null }),
       ]);
       if (all.success) {
@@ -67,7 +67,7 @@ export default function CompaniesPage() {
     if (!pagesCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const all = await getAllCompanyPages(10, pagesCursor);
+      const all = await getAllCompanyPages(3, pagesCursor);
       if (all.success && all.pages) {
         setPages(prev => [...prev, ...all.pages]);
         setPagesCursor(all.nextCursor ?? null);

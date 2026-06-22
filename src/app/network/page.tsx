@@ -20,7 +20,7 @@ export default function NetworkPage() {
 
   async function load(cursor?: string) {
     try {
-      const res = await getMyNetwork(10, cursor);
+      const res = await getMyNetwork(3, cursor);
       if (res.success) {
         if (cursor) {
           setData((prev: any) => ({

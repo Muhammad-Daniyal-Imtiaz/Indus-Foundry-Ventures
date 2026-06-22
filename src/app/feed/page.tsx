@@ -113,7 +113,7 @@ export default function FeedPage() {
     async function loadFeed() {
       setLoading(true);
       try {
-        const res = await getPosts(10);
+        const res = await getPosts(3);
         if (res.success && res.posts) {
           setPostsList(res.posts);
           setPostsCursor(res.nextCursor ?? null);
@@ -217,7 +217,7 @@ export default function FeedPage() {
     if (!postsCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const res = await getPosts(10, postsCursor);
+      const res = await getPosts(3, postsCursor);
       if (res.success && res.posts) {
         setPostsList(prev => [...prev, ...res.posts]);
         setPostsCursor(res.nextCursor ?? null);

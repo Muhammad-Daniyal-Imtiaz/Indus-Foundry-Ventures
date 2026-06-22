@@ -71,7 +71,7 @@ export default function ChallengesPage() {
     async function loadData() {
       try {
         const [chalRes, compRes] = await Promise.all([
-          getAllChallenges(10),
+          getAllChallenges(3),
           session ? getMyCompanyPages() : Promise.resolve({ success: true, pages: [] })
         ]);
         if (chalRes.success && chalRes.challenges) {
@@ -124,7 +124,7 @@ export default function ChallengesPage() {
     if (!challengesCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const res = await getAllChallenges(10, challengesCursor);
+      const res = await getAllChallenges(3, challengesCursor);
       if (res.success && res.challenges) {
         setChallenges(prev => [...prev, ...res.challenges]);
         setChallengesCursor(res.nextCursor ?? null);
