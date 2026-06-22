@@ -8,8 +8,8 @@ import { eq } from "drizzle-orm";
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       // CRITICAL: null wellKnown to prevent openid-client Issuer.discover()
       // (Node.js http/https DNS resolution) which crashes in workerd.
       wellKnown: null as unknown as undefined,
@@ -29,31 +29,72 @@ export const authOptions: NextAuthOptions = {
       token: {
         url: "https://oauth2.googleapis.com/token",
         async request({ provider, params, checks }: any) {
-          const body = new URLSearchParams({
-            code: params.code,
-            client_id: provider.clientId,
-            client_secret: provider.clientSecret,
-            redirect_uri: provider.callbackUrl,
-            grant_type: "authorization_code",
-          });
-          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
-          const res = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body,
-          });
-          const tokens = await res.json();
-          return { tokens };
+          try {
+            if (!params.code) {
+              throw new Error("No authorization code received");
+            }
+
+            const body = new URLSearchParams({
+              code: params.code,
+              client_id: provider.clientId,
+              client_secret: provider.clientSecret,
+              redirect_uri: provider.callbackUrl,
+              grant_type: "authorization_code",
+            });
+            
+            if (checks?.code_verifier) {
+              body.set("code_verifier", checks.code_verifier);
+            }
+
+            const res = await fetch("https://oauth2.googleapis.com/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body,
+            });
+
+            if (!res.ok) {
+              const errorData = await res.text();
+              console.error("Token exchange failed:", res.status, errorData);
+              throw new Error(`Token exchange failed: ${res.status}`);
+            }
+
+            const tokens = await res.json();
+            
+            if (!tokens.access_token) {
+              throw new Error("No access token in response");
+            }
+
+            return { tokens };
+          } catch (error) {
+            console.error("Token request error:", error);
+            throw error;
+          }
         },
       },
       // Custom userinfo fetch via fetch (no openid-client / Node.js http).
       userinfo: {
         url: "https://openidconnect.googleapis.com/v1/userinfo",
         async request({ tokens }: any) {
-          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-            headers: { Authorization: `Bearer ${tokens.access_token}` },
-          });
-          return res.json();
+          try {
+            if (!tokens.access_token) {
+              throw new Error("No access token available");
+            }
+
+            const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+              headers: { Authorization: `Bearer ${tokens.access_token}` },
+            });
+
+            if (!res.ok) {
+              const errorData = await res.text();
+              console.error("Userinfo fetch failed:", res.status, errorData);
+              throw new Error(`Userinfo fetch failed: ${res.status}`);
+            }
+
+            return res.json();
+          } catch (error) {
+            console.error("Userinfo request error:", error);
+            throw error;
+          }
         },
       },
       profile(profile) {
@@ -123,47 +164,81 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }: any) {
-      if (account?.provider === "google") {
-        if (!user.email) return false;
+      try {
+        if (account?.provider === "google") {
+          if (!user.email) {
+            console.error("Google sign-in failed: No email provided");
+            return false;
+          }
 
-        const email = user.email.toLowerCase().trim();
-        const name = user.name || "Google User";
-        const avatarUrl = user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          const email = user.email.toLowerCase().trim();
+          const name = user.name || "Google User";
+          const avatarUrl = user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
 
-        // Sync with Turso DB
-        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
-        if (existingUser.length === 0) {
-          const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
-          await db.insert(users).values({
-            id: newUserId,
-            email,
-            name,
-            role: "None", // None triggers OnboardingOverlay to prompt for role
-            avatarUrl,
-          });
+          // Sync with Turso DB
+          try {
+            const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+            
+            if (existingUser.length === 0) {
+              const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+              await db.insert(users).values({
+                id: newUserId,
+                email,
+                name,
+                role: "None", // None triggers OnboardingOverlay to prompt for role
+                avatarUrl,
+              });
+              console.log("New user created:", email);
+            } else {
+              console.log("Existing user signed in:", email);
+            }
+          } catch (dbError) {
+            console.error("Database error during sign-in:", dbError);
+            // Continue with sign-in even if DB fails
+          }
         }
+        return true;
+      } catch (error) {
+        console.error("Sign-in callback error:", error);
+        return false;
       }
-      return true;
     },
     async jwt({ token, user, account }: any) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role || "None";
-        token.avatarUrl = user.image || user.avatarUrl;
-      }
-
-      if (account && token.id) {
-        try {
-          const dbUsers = await db.select().from(users).where(eq(users.id, token.id)).limit(1);
-          if (dbUsers.length > 0) {
-            token.role = dbUsers[0].role;
-            token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
-          }
-        } catch {
-          // non-fatal
+      try {
+        if (user) {
+          token.id = user.id;
+          token.role = user.role || "None";
+          token.avatarUrl = user.image || user.avatarUrl;
         }
+
+        // For Google OAuth, we need to fetch user from DB by email
+        if (account?.provider === "google" && token.email) {
+          try {
+            const dbUsers = await db.select().from(users).where(eq(users.email, token.email)).limit(1);
+            if (dbUsers.length > 0) {
+              token.id = dbUsers[0].id;
+              token.role = dbUsers[0].role;
+              token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+            }
+          } catch (dbError) {
+            console.error("Database error in JWT callback:", dbError);
+          }
+        } else if (account && token.id) {
+          try {
+            const dbUsers = await db.select().from(users).where(eq(users.id, token.id)).limit(1);
+            if (dbUsers.length > 0) {
+              token.role = dbUsers[0].role;
+              token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+            }
+          } catch (dbError) {
+            console.error("Database error in JWT callback:", dbError);
+          }
+        }
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        return token;
       }
-      return token;
     },
     async session({ session, token }: any) {
       if (token && session.user) {
@@ -177,7 +252,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    error: "/login",
+    error: "/api/auth/error",
   },
   session: {
     strategy: "jwt",
