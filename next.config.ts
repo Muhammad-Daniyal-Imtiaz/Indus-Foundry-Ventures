@@ -8,16 +8,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
     },
   },
-  // Keep the entire @libsql family + auth packages out of the edge bundle.
-  // These packages ship Node-only or workerd-incompatible native files.
   serverExternalPackages: [
     "@libsql/client",
     "@libsql/hrana-client",
