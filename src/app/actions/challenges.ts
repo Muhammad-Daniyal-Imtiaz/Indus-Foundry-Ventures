@@ -5,11 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { challenges, companyPages, users, challengeTeams, challengeSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
 
-// ─── Challenges CRUD ─────────────────────────────────────────────────────
+// ─── Cached inner functions ─────────────────────────────────────────────
 
-export async function getAllChallenges(limit = 10, cursor?: string) {
-  try {
+const _getCachedChallenges = unstable_cache(
+  async (limit: number, cursor: string | undefined) => {
+    cacheLife("challenges");
+
     const whereClause = cursor ? lt(challenges.createdAt, cursor) : undefined;
 
     const list = await db
@@ -24,6 +27,58 @@ export async function getAllChallenges(limit = 10, cursor?: string) {
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
 
     return { success: true, challenges: items, nextCursor, hasMore };
+  },
+  ["challenges-list"],
+  { revalidate: 300, tags: ["challenges"] }
+);
+
+const _getCachedChallengeById = unstable_cache(
+  async (id: string) => {
+    cacheLife("challenges");
+
+    const list = await db.select().from(challenges).where(eq(challenges.id, id)).limit(1);
+    if (!list.length) return { success: false, error: "Challenge not found." };
+    return { success: true, challenge: list[0] };
+  },
+  ["challenges-detail"],
+  { revalidate: 300, tags: ["challenges"] }
+);
+
+const _getCachedChallengeTeams = unstable_cache(
+  async (challengeId: string) => {
+    cacheLife("challenges");
+
+    const list = await db
+      .select()
+      .from(challengeTeams)
+      .where(eq(challengeTeams.challengeId, challengeId))
+      .orderBy(desc(challengeTeams.createdAt));
+    return { success: true, teams: list };
+  },
+  ["challenge-teams"],
+  { revalidate: 300, tags: ["challenge-teams"] }
+);
+
+const _getCachedChallengeSubmissions = unstable_cache(
+  async (challengeId: string) => {
+    cacheLife("challenges");
+
+    const list = await db
+      .select()
+      .from(challengeSubmissions)
+      .where(eq(challengeSubmissions.challengeId, challengeId))
+      .orderBy(desc(challengeSubmissions.createdAt));
+    return { success: true, submissions: list };
+  },
+  ["challenge-submissions"],
+  { revalidate: 300, tags: ["challenge-submissions"] }
+);
+
+// ─── Exported: Challenges CRUD ──────────────────────────────────────────
+
+export async function getAllChallenges(limit = 10, cursor?: string) {
+  try {
+    return await _getCachedChallenges(limit, cursor);
   } catch (error: any) {
     console.error("Error fetching challenges:", error);
     return { success: false, error: "Failed to load challenges." };
@@ -32,9 +87,7 @@ export async function getAllChallenges(limit = 10, cursor?: string) {
 
 export async function getChallengeById(id: string) {
   try {
-    const list = await db.select().from(challenges).where(eq(challenges.id, id)).limit(1);
-    if (!list.length) return { success: false, error: "Challenge not found." };
-    return { success: true, challenge: list[0] };
+    return await _getCachedChallengeById(id);
   } catch (error: any) {
     console.error("Error fetching challenge:", error);
     return { success: false, error: "Failed to load challenge." };
@@ -101,6 +154,9 @@ export async function createChallenge(formData: FormData) {
     };
 
     await db.insert(challenges).values(challengeData);
+
+    revalidateTag("challenges");
+    revalidatePath("/challenges");
     
     return { success: true, challenge: challengeData };
   } catch (error: any) {
@@ -146,6 +202,9 @@ export async function updateChallenge(id: string, formData: FormData) {
 
     await db.update(challenges).set(updateData).where(eq(challenges.id, id));
 
+    revalidateTag("challenges");
+    revalidatePath("/challenges");
+
     return { success: true, challenge: { ...existing[0], ...updateData } };
   } catch (error: any) {
     console.error("Error updating challenge:", error);
@@ -168,6 +227,10 @@ export async function deleteChallenge(id: string) {
     if (existing[0].postedByUserId !== dbUser.id) throw new Error("Unauthorized to delete this challenge");
 
     await db.delete(challenges).where(eq(challenges.id, id));
+
+    revalidateTag("challenges");
+    revalidatePath("/challenges");
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting challenge:", error);
@@ -175,7 +238,7 @@ export async function deleteChallenge(id: string) {
   }
 }
 
-// ─── Challenge Teams ─────────────────────────────────────────────────────
+// ─── Exported: Challenge Teams ──────────────────────────────────────────
 
 export async function createChallengeTeam(formData: FormData) {
   try {
@@ -206,6 +269,10 @@ export async function createChallengeTeam(formData: FormData) {
     };
 
     await db.insert(challengeTeams).values(teamData);
+
+    revalidateTag("challenge-teams");
+    revalidatePath("/challenges");
+
     return { success: true, team: teamData };
   } catch (error: any) {
     console.error("Error creating team:", error);
@@ -215,12 +282,7 @@ export async function createChallengeTeam(formData: FormData) {
 
 export async function getChallengeTeams(challengeId: string) {
   try {
-    const list = await db
-      .select()
-      .from(challengeTeams)
-      .where(eq(challengeTeams.challengeId, challengeId))
-      .orderBy(desc(challengeTeams.createdAt));
-    return { success: true, teams: list };
+    return await _getCachedChallengeTeams(challengeId);
   } catch (error: any) {
     console.error("Error fetching teams:", error);
     return { success: false, error: "Failed to load teams." };
@@ -256,7 +318,7 @@ export async function getUserTeamForChallenge(challengeId: string) {
   }
 }
 
-// ─── Challenge Submissions ───────────────────────────────────────────────
+// ─── Exported: Challenge Submissions ────────────────────────────────────
 
 export async function createChallengeSubmission(formData: FormData) {
   try {
@@ -304,6 +366,10 @@ export async function createChallengeSubmission(formData: FormData) {
     };
 
     await db.insert(challengeSubmissions).values(submissionData);
+
+    revalidateTag("challenge-submissions");
+    revalidatePath("/challenges");
+
     return { success: true, submission: submissionData };
   } catch (error: any) {
     console.error("Error creating submission:", error);
@@ -313,12 +379,7 @@ export async function createChallengeSubmission(formData: FormData) {
 
 export async function getChallengeSubmissions(challengeId: string) {
   try {
-    const list = await db
-      .select()
-      .from(challengeSubmissions)
-      .where(eq(challengeSubmissions.challengeId, challengeId))
-      .orderBy(desc(challengeSubmissions.createdAt));
-    return { success: true, submissions: list };
+    return await _getCachedChallengeSubmissions(challengeId);
   } catch (error: any) {
     console.error("Error fetching submissions:", error);
     return { success: false, error: "Failed to load submissions." };

@@ -5,16 +5,13 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
 import { eq, desc, count, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
 
-export async function getPostById(postId: string) {
-  try {
-    const session = await getServerSession(authOptions);
-    let currentUserId: string | null = null;
-    if (session?.user?.email) {
-      const email = session.user.email.toLowerCase().trim();
-      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
-      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
-    }
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedPostById = unstable_cache(
+  async (postId: string, currentUserId: string | null) => {
+    cacheLife("feed");
 
     const result = await db
       .select({
@@ -72,21 +69,14 @@ export async function getPostById(postId: string) {
         likers,
       },
     };
-  } catch (error: any) {
-    console.error("Error loading post:", error);
-    return { success: false, error: "Failed to load post." };
-  }
-}
+  },
+  ["posts-detail"],
+  { revalidate: 300, tags: ["posts"] }
+);
 
-export async function getPosts(limit = 10, cursor?: string) {
-  try {
-    const session = await getServerSession(authOptions);
-    let currentUserId: string | null = null;
-    if (session?.user?.email) {
-      const email = session.user.email.toLowerCase().trim();
-      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
-      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
-    }
+const _getCachedPosts = unstable_cache(
+  async (limit: number, cursor: string | undefined, currentUserId: string | null) => {
+    cacheLife("feed");
 
     const whereClause = cursor ? lt(posts.createdAt, cursor) : undefined;
 
@@ -135,6 +125,61 @@ export async function getPosts(limit = 10, cursor?: string) {
     }));
 
     return { success: true, posts: formattedPosts, nextCursor, hasMore };
+  },
+  ["posts-list"],
+  { revalidate: 300, tags: ["posts"] }
+);
+
+const _getCachedPostLikes = unstable_cache(
+  async (postId: string) => {
+    cacheLife("feed");
+
+    const likes = await db
+      .select({
+        userId: postLikes.userId,
+        userName: postLikes.userName,
+        userAvatar: postLikes.userAvatar,
+      })
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId))
+      .orderBy(desc(postLikes.createdAt));
+
+    return { success: true, likes };
+  },
+  ["post-likes"],
+  { revalidate: 300, tags: ["posts"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
+
+export async function getPostById(postId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
+    }
+
+    return await _getCachedPostById(postId, currentUserId);
+  } catch (error: any) {
+    console.error("Error loading post:", error);
+    return { success: false, error: "Failed to load post." };
+  }
+}
+
+export async function getPosts(limit = 10, cursor?: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
+    }
+
+    return await _getCachedPosts(limit, cursor, currentUserId);
   } catch (error) {
     console.error("Error loading posts:", error);
     return { success: false, error: "Failed to load posts from database." };
@@ -167,7 +212,6 @@ export async function createPost(formData: FormData) {
     }
 
     const email = session.user.email?.toLowerCase().trim() || "";
-    // Load current user details
     const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (dbUsers.length === 0) {
       throw new Error("User record not found in database.");
@@ -175,7 +219,6 @@ export async function createPost(formData: FormData) {
 
     const dbUser = dbUsers[0];
 
-    // Get roles from profile
     let userRoleDisplay = dbUser.role || "Member";
     let profile = null;
     try {
@@ -202,13 +245,17 @@ export async function createPost(formData: FormData) {
       title: title.trim(),
       content: content.trim(),
       category: category,
-      imagesJson: JSON.stringify(images.slice(0, 3)), // Enforce max 3 images
+      imagesJson: JSON.stringify(images.slice(0, 3)),
       showContactEmail,
       showContactPhone,
       showContactCountry,
     };
 
     await db.insert(posts).values(newPost);
+
+    revalidateTag("posts");
+    revalidatePath("/feed");
+
     return {
       success: true,
       post: {
@@ -266,6 +313,10 @@ export async function toggleLike(postId: string) {
       .from(postLikes)
       .where(eq(postLikes.postId, postId));
 
+    revalidateTag("posts");
+    revalidatePath("/feed");
+    revalidatePath(`/feed/${postId}`);
+
     return {
       success: true,
       liked: existing.length === 0,
@@ -279,17 +330,7 @@ export async function toggleLike(postId: string) {
 
 export async function getPostLikes(postId: string) {
   try {
-    const likes = await db
-      .select({
-        userId: postLikes.userId,
-        userName: postLikes.userName,
-        userAvatar: postLikes.userAvatar,
-      })
-      .from(postLikes)
-      .where(eq(postLikes.postId, postId))
-      .orderBy(desc(postLikes.createdAt));
-
-    return { success: true, likes };
+    return await _getCachedPostLikes(postId);
   } catch (error: any) {
     console.error("Error getting post likes:", error);
     return { success: false, error: error.message || "Failed to get likes." };

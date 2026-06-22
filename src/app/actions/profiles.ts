@@ -5,16 +5,13 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users, profiles, posts, mvps, freelanceProjects, connections, follows, postLikes } from "@/db/schema";
 import { eq, desc, and, lt, count, or, like } from "drizzle-orm";
+import { unstable_cache, cacheLife } from "next/cache";
 
-export async function getUserProfile(userId: string) {
-  try {
-    const session = await getServerSession(authOptions);
-    let currentUserId: string | null = null;
-    if (session?.user?.email) {
-      const email = session.user.email.toLowerCase().trim();
-      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
-      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
-    }
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedUserProfile = unstable_cache(
+  async (userId: string, currentUserId: string | null) => {
+    cacheLife("users");
 
     const userRows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!userRows.length) return { success: false, error: "User not found." };
@@ -96,34 +93,23 @@ export async function getUserProfile(userId: string) {
       connectionId,
       isOwnProfile: currentUserId === userId,
     };
-  } catch (error: any) {
-    console.error("Error loading user profile:", error);
-    return { success: false, error: error.message || "Failed to load profile." };
-  }
-}
+  },
+  ["user-profile"],
+  { revalidate: 300, tags: ["users", "posts", "mvps", "freelance", "network"] }
+);
 
-export async function getAllUsers(limit = 3, cursor?: string, search?: string) {
-  try {
+const _getCachedAllUsers = unstable_cache(
+  async (limit: number, cursor: string | undefined) => {
+    cacheLife("users");
+
     const whereClause = cursor ? lt(users.createdAt, cursor) : undefined;
 
-    let query = db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(limit + 1);
-
-    const userList = await query;
+    const userList = await db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(limit + 1);
     const hasMore = userList.length > limit;
     const items = hasMore ? userList.slice(0, limit) : userList;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
 
-    let filtered = items;
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = items.filter(u =>
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.role.toLowerCase().includes(q)
-      );
-    }
-
-    const enriched = await Promise.all(filtered.map(async (u) => {
+    const enriched = await Promise.all(items.map(async (u) => {
       const profileRows = await db.select().from(profiles).where(eq(profiles.userId, u.id)).limit(1);
       const profile = profileRows[0] || null;
       const followerCount = (await db.select({ value: count() }).from(follows).where(eq(follows.followingId, u.id)))[0]?.value || 0;
@@ -139,6 +125,47 @@ export async function getAllUsers(limit = 3, cursor?: string, search?: string) {
     }));
 
     return { success: true, users: enriched, nextCursor, hasMore };
+  },
+  ["users-list"],
+  { revalidate: 300, tags: ["users"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
+
+export async function getUserProfile(userId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
+    }
+
+    return await _getCachedUserProfile(userId, currentUserId);
+  } catch (error: any) {
+    console.error("Error loading user profile:", error);
+    return { success: false, error: error.message || "Failed to load profile." };
+  }
+}
+
+export async function getAllUsers(limit = 3, cursor?: string, search?: string) {
+  try {
+    const result = await _getCachedAllUsers(limit, cursor);
+
+    if (!result.success || !result.users) return result;
+
+    let filtered = result.users;
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = result.users.filter(u =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.role.toLowerCase().includes(q)
+      );
+    }
+
+    return { ...result, users: filtered };
   } catch (error: any) {
     console.error("Error loading users:", error);
     return { success: false, error: error.message || "Failed to load users." };

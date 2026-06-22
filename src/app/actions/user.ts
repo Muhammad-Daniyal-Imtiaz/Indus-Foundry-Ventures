@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 export async function checkUserStatus() {
   try {
@@ -17,7 +18,6 @@ export async function checkUserStatus() {
     const sessionName = session.user.name || "User";
     const sessionImage = session.user.image || "";
 
-    // Check if user exists in Turso DB
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
     if (existingUsers.length > 0) {
@@ -28,13 +28,11 @@ export async function checkUserStatus() {
         hasRole, 
         user: {
           ...dbUser,
-          // Prefer DB avatar but fall back to session image (Google avatar)
           avatarUrl: dbUser.avatarUrl || sessionImage,
         }
       };
     }
 
-    // Authenticated via Google but not yet onboarded — return session data as user shape
     return { 
       isAuthenticated: true, 
       hasRole: false, 
@@ -65,10 +63,11 @@ export async function saveUserOnboarding(role: string) {
     const name = session.user.name || "User";
     const avatarUrl = session.user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
 
-    // Double check if already onboarded
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existingUsers.length > 0) {
       await db.update(users).set({ role }).where(eq(users.email, email));
+      revalidateTag("users");
+      revalidatePath("/users");
       return { ...existingUsers[0], role };
     }
 
@@ -82,6 +81,10 @@ export async function saveUserOnboarding(role: string) {
     };
 
     await db.insert(users).values(newUser);
+
+    revalidateTag("users");
+    revalidatePath("/users");
+
     return newUser;
   } catch (error) {
     console.error("Error during onboarding:", error);
@@ -98,6 +101,9 @@ export async function updateUserRole(role: string) {
 
     const email = session.user.email?.toLowerCase().trim() || "";
     await db.update(users).set({ role }).where(eq(users.email, email));
+
+    revalidateTag("users");
+
     return { success: true, role };
   } catch (error) {
     console.error("Error updating user role:", error);

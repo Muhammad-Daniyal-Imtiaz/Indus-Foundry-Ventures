@@ -5,9 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { freelanceProjects, users, profiles, freelanceSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
 
-export async function getFreelanceProjects(limit = 10, cursor?: string) {
-  try {
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedFreelanceProjects = unstable_cache(
+  async (limit: number, cursor: string | undefined, currentUserId: string | null) => {
+    cacheLife("freelance");
+
     const whereClause = cursor ? lt(freelanceProjects.createdAt, cursor) : undefined;
 
     const list = await db
@@ -27,29 +32,22 @@ export async function getFreelanceProjects(limit = 10, cursor?: string) {
     const items = hasMore ? list.slice(0, limit) : list;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].project.createdAt : null;
 
-    const session = await getServerSession(authOptions);
-    let currentUserEmail = session?.user?.email?.toLowerCase().trim();
-    let currentUserId: string | null = null;
     let appliedProjectIds = new Set<string>();
     let allSubmissions: any[] = [];
 
-    if (currentUserEmail) {
-      const dbUsers = await db.select().from(users).where(eq(users.email, currentUserEmail)).limit(1);
-      if (dbUsers.length > 0) {
-        currentUserId = dbUsers[0].id;
-        const apps = await db.select({ projectId: freelanceSubmissions.projectId }).from(freelanceSubmissions).where(eq(freelanceSubmissions.applicantUserId, currentUserId));
-        appliedProjectIds = new Set(apps.map(a => a.projectId));
-        
-        allSubmissions = await db
-          .select({
-            submission: freelanceSubmissions,
-            user: users,
-          })
-          .from(freelanceSubmissions)
-          .leftJoin(users, eq(freelanceSubmissions.applicantUserId, users.id))
-          .leftJoin(freelanceProjects, eq(freelanceSubmissions.projectId, freelanceProjects.id))
-          .where(eq(freelanceProjects.userId, currentUserId));
-      }
+    if (currentUserId) {
+      const apps = await db.select({ projectId: freelanceSubmissions.projectId }).from(freelanceSubmissions).where(eq(freelanceSubmissions.applicantUserId, currentUserId));
+      appliedProjectIds = new Set(apps.map(a => a.projectId));
+      
+      allSubmissions = await db
+        .select({
+          submission: freelanceSubmissions,
+          user: users,
+        })
+        .from(freelanceSubmissions)
+        .leftJoin(users, eq(freelanceSubmissions.applicantUserId, users.id))
+        .leftJoin(freelanceProjects, eq(freelanceSubmissions.projectId, freelanceProjects.id))
+        .where(eq(freelanceProjects.userId, currentUserId));
     }
 
     const formattedProjects = items.map(({ project }) => {
@@ -69,6 +67,27 @@ export async function getFreelanceProjects(limit = 10, cursor?: string) {
     });
 
     return { success: true, projects: formattedProjects, nextCursor, hasMore };
+  },
+  ["freelance-list"],
+  { revalidate: 600, tags: ["freelance"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
+
+export async function getFreelanceProjects(limit = 10, cursor?: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    let currentUserEmail = session?.user?.email?.toLowerCase().trim();
+    let currentUserId: string | null = null;
+
+    if (currentUserEmail) {
+      const dbUsers = await db.select().from(users).where(eq(users.email, currentUserEmail)).limit(1);
+      if (dbUsers.length > 0) {
+        currentUserId = dbUsers[0].id;
+      }
+    }
+
+    return await _getCachedFreelanceProjects(limit, cursor, currentUserId);
   } catch (error) {
     console.error("Error loading freelance projects:", error);
     return { success: false, error: "Failed to load freelance projects from database." };
@@ -136,6 +155,10 @@ export async function createFreelanceProject(formData: FormData) {
     };
 
     await db.insert(freelanceProjects).values(newProject);
+
+    revalidateTag("freelance");
+    revalidatePath("/freelance");
+
     return { 
       success: true, 
       project: { 
@@ -194,6 +217,9 @@ export async function submitFreelanceProposal(projectId: string, formData: FormD
     };
 
     await db.insert(freelanceSubmissions).values(submission);
+
+    revalidateTag("freelance");
+    revalidatePath("/freelance");
 
     return { success: true, submission };
   } catch (err: any) {

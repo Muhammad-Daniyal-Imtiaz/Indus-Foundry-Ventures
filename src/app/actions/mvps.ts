@@ -5,9 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { mvps, users, profiles } from "@/db/schema";
 import { eq, desc, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
 
-export async function getMvps(limit = 10, cursor?: string) {
-  try {
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedMvps = unstable_cache(
+  async (limit: number, cursor: string | undefined) => {
+    cacheLife("marketplace");
+
     const whereClause = cursor ? lt(mvps.createdAt, cursor) : undefined;
 
     const list = await db
@@ -35,6 +40,16 @@ export async function getMvps(limit = 10, cursor?: string) {
     });
 
     return { success: true, mvps: formattedMvps, nextCursor, hasMore };
+  },
+  ["mvps-list"],
+  { revalidate: 600, tags: ["mvps"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
+
+export async function getMvps(limit = 10, cursor?: string) {
+  try {
+    return await _getCachedMvps(limit, cursor);
   } catch (error) {
     console.error("Error loading mvps:", error);
     return { success: false, error: "Failed to load mvps from database." };
@@ -107,6 +122,10 @@ export async function createMvp(formData: FormData) {
     };
 
     await db.insert(mvps).values(newMvp);
+
+    revalidateTag("mvps");
+    revalidatePath("/mvps");
+
     return { 
       success: true, 
       mvp: { 

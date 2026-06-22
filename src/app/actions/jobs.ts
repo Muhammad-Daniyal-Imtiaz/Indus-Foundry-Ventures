@@ -5,6 +5,74 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { jobPostings, jobApplications, users, companyPages } from "@/db/schema";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedJobs = unstable_cache(
+  async (
+    filters: { industry?: string; employmentType?: string; experienceLevel?: string; locationType?: string } | undefined,
+    limit: number,
+    cursor: string | undefined,
+    currentUserId: string | null
+  ) => {
+    cacheLife("jobs");
+
+    const conditions = [eq(jobPostings.isOpen, true)];
+    if (cursor) {
+      conditions.push(lt(jobPostings.createdAt, cursor));
+    }
+
+    const jobs = await db.select().from(jobPostings)
+      .where(and(...conditions))
+      .orderBy(
+        desc(jobPostings.isFeatured),
+        desc(jobPostings.createdAt)
+      )
+      .limit(limit + 1);
+
+    const hasMore = jobs.length > limit;
+    const items = hasMore ? jobs.slice(0, limit) : jobs;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
+
+    let filtered = items;
+    if (filters?.industry && filters.industry !== "All") {
+      filtered = filtered.filter((j) => j.industry === filters.industry);
+    }
+    if (filters?.employmentType && filters.employmentType !== "All") {
+      filtered = filtered.filter((j) => j.employmentType === filters.employmentType);
+    }
+    if (filters?.experienceLevel && filters.experienceLevel !== "All") {
+      filtered = filtered.filter((j) => j.experienceLevel === filters.experienceLevel);
+    }
+    if (filters?.locationType && filters.locationType !== "All") {
+      filtered = filtered.filter((j) => j.locationType === filters.locationType);
+    }
+
+    let userAppliedJobIds = new Set<string>();
+    if (currentUserId) {
+      const apps = await db.select({ jobId: jobApplications.jobId }).from(jobApplications).where(eq(jobApplications.applicantUserId, currentUserId));
+      userAppliedJobIds = new Set(apps.map(a => a.jobId));
+    }
+
+    return {
+      success: true,
+      jobs: filtered.map((j) => ({
+        ...j,
+        skills: JSON.parse(j.skillsJson || "[]") as string[],
+        requirements: JSON.parse(j.requirementsJson || "[]") as string[],
+        benefits: JSON.parse(j.benefitsJson || "[]") as string[],
+        hasApplied: userAppliedJobIds.has(j.id),
+      })),
+      nextCursor,
+      hasMore,
+    };
+  },
+  ["jobs-list"],
+  { revalidate: 600, tags: ["jobs"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
 
 export async function createJobPosting(formData: FormData) {
   try {
@@ -84,6 +152,10 @@ export async function createJobPosting(formData: FormData) {
     };
 
     await db.insert(jobPostings).values(job);
+
+    revalidateTag("jobs");
+    revalidatePath("/jobs");
+
     return {
       success: true,
       job: { ...job, skills, requirements, benefits },
@@ -101,60 +173,15 @@ export async function getAllJobs(filters?: {
   locationType?: string;
 }, limit = 10, cursor?: string) {
   try {
-    const conditions = [eq(jobPostings.isOpen, true)];
-    if (cursor) {
-      conditions.push(lt(jobPostings.createdAt, cursor));
-    }
-
-    const jobs = await db.select().from(jobPostings)
-      .where(and(...conditions))
-      .orderBy(
-        desc(jobPostings.isFeatured),
-        desc(jobPostings.createdAt)
-      )
-      .limit(limit + 1);
-
-    const hasMore = jobs.length > limit;
-    const items = hasMore ? jobs.slice(0, limit) : jobs;
-    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
-
-    let filtered = items;
-    if (filters?.industry && filters.industry !== "All") {
-      filtered = filtered.filter((j) => j.industry === filters.industry);
-    }
-    if (filters?.employmentType && filters.employmentType !== "All") {
-      filtered = filtered.filter((j) => j.employmentType === filters.employmentType);
-    }
-    if (filters?.experienceLevel && filters.experienceLevel !== "All") {
-      filtered = filtered.filter((j) => j.experienceLevel === filters.experienceLevel);
-    }
-    if (filters?.locationType && filters.locationType !== "All") {
-      filtered = filtered.filter((j) => j.locationType === filters.locationType);
-    }
-
     const session = await getServerSession(authOptions);
-    let userAppliedJobIds = new Set<string>();
+    let currentUserId: string | null = null;
     if (session?.user?.email) {
       const email = session.user.email.toLowerCase().trim();
       const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
-      if (dbUsers.length) {
-        const apps = await db.select({ jobId: jobApplications.jobId }).from(jobApplications).where(eq(jobApplications.applicantUserId, dbUsers[0].id));
-        userAppliedJobIds = new Set(apps.map(a => a.jobId));
-      }
+      if (dbUsers.length) currentUserId = dbUsers[0].id;
     }
 
-    return {
-      success: true,
-      jobs: filtered.map((j) => ({
-        ...j,
-        skills: JSON.parse(j.skillsJson || "[]") as string[],
-        requirements: JSON.parse(j.requirementsJson || "[]") as string[],
-        benefits: JSON.parse(j.benefitsJson || "[]") as string[],
-        hasApplied: userAppliedJobIds.has(j.id),
-      })),
-      nextCursor,
-      hasMore,
-    };
+    return await _getCachedJobs(filters, limit, cursor, currentUserId);
   } catch (err: any) {
     return { success: false, jobs: [], error: err.message };
   }
@@ -166,7 +193,7 @@ export async function getJobById(id: string) {
     if (!rows.length) return { success: false, error: "Job not found." };
 
     const job = rows[0];
-    // Increment views
+    // Increment views (side effect — not cached)
     await db
       .update(jobPostings)
       .set({ viewsCount: sql`${jobPostings.viewsCount} + 1` })
@@ -196,7 +223,6 @@ export async function applyForJob(jobId: string, formData: FormData) {
     if (!dbUsers.length) return { success: false, error: "User not found." };
     const dbUser = dbUsers[0];
 
-    // Check existing application
     const existingApp = await db
       .select({ id: jobApplications.id })
       .from(jobApplications)
@@ -234,11 +260,13 @@ export async function applyForJob(jobId: string, formData: FormData) {
 
     await db.insert(jobApplications).values(application);
 
-    // Increment applicationsCount
     await db
       .update(jobPostings)
       .set({ applicationsCount: sql`${jobPostings.applicationsCount} + 1` })
       .where(eq(jobPostings.id, jobId));
+
+    revalidateTag("jobs");
+    revalidatePath("/jobs");
 
     return { success: true, application };
   } catch (err: any) {
@@ -261,7 +289,6 @@ export async function deleteJobPosting(jobId: string) {
     if (!jobRows.length) return { success: false, error: "Job not found." };
     const job = jobRows[0];
 
-    // Check if user is the owner of the company page
     if (!job.companyPageId) {
       return { success: false, error: "Invalid job posting." };
     }
@@ -272,6 +299,9 @@ export async function deleteJobPosting(jobId: string) {
 
     await db.delete(jobApplications).where(eq(jobApplications.jobId, jobId));
     await db.delete(jobPostings).where(eq(jobPostings.id, jobId));
+
+    revalidateTag("jobs");
+    revalidatePath("/jobs");
 
     return { success: true };
   } catch (err: any) {
@@ -343,6 +373,10 @@ export async function updateJobPosting(jobId: string, formData: FormData) {
     };
 
     await db.update(jobPostings).set(jobUpdate).where(eq(jobPostings.id, jobId));
+
+    revalidateTag("jobs");
+    revalidatePath("/jobs");
+
     return {
       success: true,
       job: { ...existingJob, ...jobUpdate, skills, requirements, benefits },

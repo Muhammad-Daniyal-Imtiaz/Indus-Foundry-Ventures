@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companyPages, users, jobPostings, jobApplications } from "@/db/schema";
 import { eq, desc, like, sql, and, lt } from "drizzle-orm";
+import { revalidateTag, revalidatePath, unstable_cache, cacheLife } from "next/cache";
+
+// ─── Helpers ────────────────────────────────────────────────────────────
 
 function generateSlug(name: string): string {
   return name
@@ -15,6 +18,69 @@ function generateSlug(name: string): string {
     .replace(/-+/g, "-")
     .slice(0, 60);
 }
+
+// ─── Cached inner functions ─────────────────────────────────────────────
+
+const _getCachedCompanyPages = unstable_cache(
+  async (limit: number, cursor: string | undefined) => {
+    cacheLife("companies");
+
+    const whereClause = cursor ? lt(companyPages.createdAt, cursor) : undefined;
+
+    const rows = await db
+      .select()
+      .from(companyPages)
+      .where(whereClause)
+      .orderBy(desc(companyPages.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
+
+    return {
+      success: true,
+      pages: items.map((p) => ({
+        ...p,
+        specialties: JSON.parse(p.specialtiesJson || "[]") as string[],
+      })),
+      nextCursor,
+      hasMore,
+    };
+  },
+  ["companies-list"],
+  { revalidate: 600, tags: ["companies"] }
+);
+
+const _getCachedCompanyPageBySlug = unstable_cache(
+  async (slug: string) => {
+    cacheLife("companies");
+
+    const rows = await db
+      .select({ page: companyPages, owner: users })
+      .from(companyPages)
+      .leftJoin(users, eq(companyPages.ownerId, users.id))
+      .where(eq(companyPages.slug, slug))
+      .limit(1);
+
+    if (!rows.length) return { success: false, error: "Company page not found." };
+
+    const { page, owner } = rows[0];
+    return {
+      success: true,
+      page: {
+        ...page,
+        specialties: JSON.parse(page.specialtiesJson || "[]") as string[],
+        ownerName: owner?.name,
+        ownerAvatar: owner?.avatarUrl,
+      },
+    };
+  },
+  ["company-detail"],
+  { revalidate: 600, tags: ["companies"] }
+);
+
+// ─── Exported server actions ────────────────────────────────────────────
 
 export async function createCompanyPage(formData: FormData) {
   try {
@@ -42,7 +108,6 @@ export async function createCompanyPage(formData: FormData) {
     const specialtiesRaw = formData.get("specialties") as string;
     const specialties = specialtiesRaw ? JSON.parse(specialtiesRaw) : [];
 
-    // Ensure unique slug
     let baseSlug = generateSlug(name);
     let slug = baseSlug;
     let suffix = 1;
@@ -78,6 +143,10 @@ export async function createCompanyPage(formData: FormData) {
     };
 
     await db.insert(companyPages).values(page);
+
+    revalidateTag("companies");
+    revalidatePath("/company");
+
     return { success: true, slug, page: { ...page, specialties } };
   } catch (err: any) {
     console.error("createCompanyPage error:", err);
@@ -87,25 +156,7 @@ export async function createCompanyPage(formData: FormData) {
 
 export async function getCompanyPageBySlug(slug: string) {
   try {
-    const rows = await db
-      .select({ page: companyPages, owner: users })
-      .from(companyPages)
-      .leftJoin(users, eq(companyPages.ownerId, users.id))
-      .where(eq(companyPages.slug, slug))
-      .limit(1);
-
-    if (!rows.length) return { success: false, error: "Company page not found." };
-
-    const { page, owner } = rows[0];
-    return {
-      success: true,
-      page: {
-        ...page,
-        specialties: JSON.parse(page.specialtiesJson || "[]") as string[],
-        ownerName: owner?.name,
-        ownerAvatar: owner?.avatarUrl,
-      },
-    };
+    return await _getCachedCompanyPageBySlug(slug);
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -166,28 +217,7 @@ export async function getMyCompanyPages() {
 
 export async function getAllCompanyPages(limit = 10, cursor?: string) {
   try {
-    const whereClause = cursor ? lt(companyPages.createdAt, cursor) : undefined;
-
-    const rows = await db
-      .select()
-      .from(companyPages)
-      .where(whereClause)
-      .orderBy(desc(companyPages.createdAt))
-      .limit(limit + 1);
-
-    const hasMore = rows.length > limit;
-    const items = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
-
-    return {
-      success: true,
-      pages: items.map((p) => ({
-        ...p,
-        specialties: JSON.parse(p.specialtiesJson || "[]") as string[],
-      })),
-      nextCursor,
-      hasMore,
-    };
+    return await _getCachedCompanyPages(limit, cursor);
   } catch (err: any) {
     return { success: false, pages: [], error: err.message };
   }
@@ -206,7 +236,6 @@ export async function updateCompanyPage(formData: FormData) {
     const pageId = formData.get("pageId") as string;
     if (!pageId) return { success: false, error: "Page ID is required." };
 
-    // Verify ownership
     const existing = await db.select().from(companyPages).where(eq(companyPages.id, pageId)).limit(1);
     if (!existing.length) return { success: false, error: "Company page not found." };
     if (existing[0].ownerId !== dbUser.id) return { success: false, error: "Not authorized to edit this page." };
@@ -227,7 +256,6 @@ export async function updateCompanyPage(formData: FormData) {
     const specialtiesRaw = formData.get("specialties") as string;
     const specialties = specialtiesRaw ? JSON.parse(specialtiesRaw) : [];
 
-    // Re-generate slug if name changed
     let slug = existing[0].slug;
     const newBase = generateSlug(name);
     if (newBase !== existing[0].slug.split("-")[0]) {
@@ -265,6 +293,9 @@ export async function updateCompanyPage(formData: FormData) {
       })
       .where(eq(companyPages.id, pageId));
 
+    revalidateTag("companies");
+    revalidatePath("/company");
+
     return { success: true, slug, page: existing[0] };
   } catch (err: any) {
     console.error("updateCompanyPage error:", err);
@@ -291,12 +322,10 @@ export async function getCompanySubmissions(slug: string) {
     if (!companyRows.length) return { success: false, error: "Company page not found." };
     const company = companyRows[0];
 
-    // Check ownership
     if (company.ownerId !== dbUser.id) {
       return { success: false, error: "You are not the owner of this company page." };
     }
 
-    // Build a resilient query that safely handles possible missing columns
     const rawApps = await db
       .select()
       .from(jobApplications)
@@ -304,7 +333,6 @@ export async function getCompanySubmissions(slug: string) {
       .where(eq(jobPostings.companyPageId, company.id))
       .orderBy(desc(jobApplications.createdAt));
 
-    // Map to safe submission objects
     const apps = rawApps.map((row) => ({
       id: row.job_applications.id,
       jobId: row.job_applications.jobId,
@@ -315,7 +343,6 @@ export async function getCompanySubmissions(slug: string) {
       resumeUrl: row.job_applications.resumeUrl,
       portfolioLink: row.job_applications.portfolioLink,
       phone: row.job_applications.phone,
-      // Handle both possible field names
       coverNote: (row.job_applications as any).coverNote || null,
       coverLetterUrl: (row.job_applications as any).coverLetterUrl || null,
       status: row.job_applications.status,
@@ -326,7 +353,6 @@ export async function getCompanySubmissions(slug: string) {
     return { success: true, submissions: apps };
   } catch (err: any) {
     console.error("getCompanySubmissions error:", err);
-    // If we get a column error, let's still mark isOwner true by returning minimal success
     return { success: true, submissions: [] };
   }
 }
