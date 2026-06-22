@@ -336,6 +336,43 @@ export const postLikes = sqliteTable(
   })
 );
 
+// ─── Connections (LinkedIn-style) ────────────────────────────────────────────
+export const connections = sqliteTable(
+  "connections",
+  {
+    id: text("id").primaryKey(),
+    senderId: text("sender_id").notNull(),     // FK → users.id (who sent request)
+    senderName: text("sender_name").notNull(),
+    senderAvatar: text("sender_avatar").notNull(),
+    receiverId: text("receiver_id").notNull(), // FK → users.id (who receives request)
+    receiverName: text("receiver_name").notNull(),
+    receiverAvatar: text("receiver_avatar").notNull(),
+    status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'rejected'
+    ...timestamps,
+  },
+  (t) => ({
+    uniqueConnection: uniqueIndex("connections_unique_idx").on(t.senderId, t.receiverId),
+    senderIdx: index("connections_sender_idx").on(t.senderId),
+    receiverIdx: index("connections_receiver_idx").on(t.receiverId),
+    statusIdx: index("connections_status_idx").on(t.status),
+  })
+);
+
+// ─── Follows ─────────────────────────────────────────────────────────────────
+export const follows = sqliteTable(
+  "follows",
+  {
+    followerId: text("follower_id").notNull(),   // FK → users.id (who follows)
+    followingId: text("following_id").notNull(), // FK → users.id (who is followed)
+    ...timestamps,
+  },
+  (t) => ({
+    uniqueFollow: uniqueIndex("follows_unique_idx").on(t.followerId, t.followingId),
+    followerIdx: index("follows_follower_idx").on(t.followerId),
+    followingIdx: index("follows_following_idx").on(t.followingId),
+  })
+);
+
 // ─── Type exports ─────────────────────────────────────────────────────────────
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -375,3 +412,9 @@ export type NewChallengeSubmission = typeof challengeSubmissions.$inferInsert;
 
 export type PostLike = typeof postLikes.$inferSelect;
 export type NewPostLike = typeof postLikes.$inferInsert;
+
+export type Connection = typeof connections.$inferSelect;
+export type NewConnection = typeof connections.$inferInsert;
+
+export type Follow = typeof follows.$inferSelect;
+export type NewFollow = typeof follows.$inferInsert;

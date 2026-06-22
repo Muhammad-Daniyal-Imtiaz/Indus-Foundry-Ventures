@@ -23,7 +23,8 @@ import {
   HelpCircle,
   Cpu,
   Loader2,
-  ShoppingBag
+  ShoppingBag,
+  UserPlus
 } from "lucide-react";
 
 export default function Header() {
@@ -109,6 +110,16 @@ export default function Header() {
             }`}
           >
             Home
+          </Link>
+
+          {/* Network Link */}
+          <Link 
+            href="/network"
+            className={`text-xs font-bold tracking-wide transition-all ${
+              pathname === "/network" ? "text-accent" : "text-secondary hover:text-primary"
+            }`}
+          >
+            My Network
           </Link>
 
           {/* Dropdown 1: Forging Modules */}
@@ -402,6 +413,14 @@ export default function Header() {
                 style={{ color: "var(--text-primary)" }}
               >
                 Home
+              </Link>
+              
+              <Link 
+                href="/network"
+                className="block text-sm font-bold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                My Network
               </Link>
               
               <div className="space-y-2">
