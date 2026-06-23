@@ -98,7 +98,7 @@ export const authOptions: NextAuthOptions = {
         role: { label: "Role", type: "text", placeholder: "Founder" },
         avatarUrl: { label: "Avatar", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: any) {
         if (!credentials?.email || !credentials?.name) {
           return null;
         }
