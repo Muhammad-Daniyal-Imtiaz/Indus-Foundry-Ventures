@@ -23,11 +23,35 @@ function createGoogleProvider() {
         scope: "openid email profile",
       },
     },
+    idToken: false, // Prevents NextAuth from requiring an issuer for ID token validation
     token: {
       url: "https://oauth2.googleapis.com/token",
+      async request({ provider, params, checks }: any) {
+        const body = new URLSearchParams({
+          code: params.code,
+          client_id: provider.clientId,
+          client_secret: provider.clientSecret,
+          redirect_uri: provider.callbackUrl,
+          grant_type: "authorization_code",
+        });
+        if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
+        const res = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        });
+        const tokens = await res.json();
+        return { tokens };
+      },
     },
     userinfo: {
       url: "https://openidconnect.googleapis.com/v1/userinfo",
+      async request({ tokens }: any) {
+        const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        return res.json();
+      },
     },
     wellKnown: undefined as any,
     checks: ["state"] as any,
