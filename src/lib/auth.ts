@@ -31,7 +31,7 @@ const googleOAuthProvider = {
   },
   token: {
     url: "https://oauth2.googleapis.com/token",
-    async request({ provider, params, checks }) {
+    async request({ provider, params, checks }: any) {
       const clientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "";
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "";
       const body = new URLSearchParams({
@@ -53,14 +53,14 @@ const googleOAuthProvider = {
   },
   userinfo: {
     url: "https://openidconnect.googleapis.com/v1/userinfo",
-    async request({ tokens }) {
+    async request({ tokens }: any) {
       const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
       return res.json();
     },
   },
-  profile(profile) {
+  profile(profile: any) {
     return {
       id: profile.sub,
       name: profile.name,
@@ -223,10 +223,10 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   debug: process.env.NODE_ENV !== "production",
   logger: {
-    error(code, metadata) {
+    error(code: any, metadata: any) {
       console.error("NextAuth error:", code, metadata);
     },
-    warn(code) {
+    warn(code: any) {
       console.warn("NextAuth warning:", code);
     },
   },
