@@ -7,70 +7,64 @@ const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
 const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "";
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "";
 
-function createGoogleProvider() {
-  return {
-    id: "google" as const,
-    name: "Google",
-    type: "oauth" as const,
-    clientId: googleClientId,
-    clientSecret: googleClientSecret,
-    authorization: {
-      url: "https://accounts.google.com/o/oauth2/v2/auth",
-      params: {
-        prompt: "consent",
-        access_type: "offline",
-        response_type: "code",
-        scope: "openid email profile",
-      },
-    },
-    idToken: false, // Prevents NextAuth from requiring an issuer for ID token validation
-    token: {
-      url: "https://oauth2.googleapis.com/token",
-      async request({ provider, params, checks }: any) {
-        const body = new URLSearchParams({
-          code: params.code,
-          client_id: provider.clientId,
-          client_secret: provider.clientSecret,
-          redirect_uri: provider.callbackUrl,
-          grant_type: "authorization_code",
-        });
-        if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
-        const res = await fetch("https://oauth2.googleapis.com/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body,
-        });
-        const tokens = await res.json();
-        return { tokens };
-      },
-    },
-    userinfo: {
-      url: "https://openidconnect.googleapis.com/v1/userinfo",
-      async request({ tokens }: any) {
-        const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-          headers: { Authorization: `Bearer ${tokens.access_token}` },
-        });
-        return res.json();
-      },
-    },
-    wellKnown: undefined as any,
-    checks: ["state"] as any,
-    profile(profile: any) {
-      return {
-        id: profile.sub,
-        name: profile.name,
-        email: profile.email,
-        image: profile.picture,
-      };
-    },
-    style: { brandColor: "#4285F4", logo: "https://accounts.google.com/favicon.ico" },
-    options: {},
-  };
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
-    createGoogleProvider() as any,
+    GoogleProvider({
+      get clientId() { return process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || ""; },
+      get clientSecret() { return process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || ""; },
+      // CRITICAL: null wellKnown to prevent openid-client Issuer.discover()
+      // (Node.js http/https DNS resolution) which crashes in workerd.
+      wellKnown: null as unknown as undefined,
+      // CRITICAL: ["state"] only — skip pkce which needs openid-client generators.
+      checks: ["state"],
+      idToken: false, // Disables JWKS fetching
+      authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+          scope: "openid email profile",
+        },
+      },
+      token: {
+        url: "https://oauth2.googleapis.com/token",
+        async request({ provider, params, checks }: any) {
+          const body = new URLSearchParams({
+            code: params.code,
+            client_id: provider.clientId,
+            client_secret: provider.clientSecret,
+            redirect_uri: provider.callbackUrl,
+            grant_type: "authorization_code",
+          });
+          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
+          const res = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+          const tokens = await res.json();
+          return { tokens };
+        },
+      },
+      userinfo: {
+        url: "https://openidconnect.googleapis.com/v1/userinfo",
+        async request({ tokens }: any) {
+          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          return res.json();
+        },
+      },
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.picture ? profile.email : profile.email,
+          image: profile.picture,
+        };
+      },
+    }),
     {
       id: "credentials",
       name: "Credentials",
